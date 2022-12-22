@@ -196,6 +196,13 @@ ndvi <- get_vegatation_raster(
   region = region_ee,
   scale = 1000)
 
+evi <- get_vegatation_raster(
+  from = "2019-01-01",
+  to = "2019-12-31",
+  band = "EVI",
+  region = region_ee,
+  scale = 1000)
+
 # 3. Downloading raster layer ---------------------------------------------
 
 ee_as_raster(
@@ -223,5 +230,12 @@ ee_as_raster(
   image = ndvi,
   region = region_ee,
   dsn = "rasters/ndvi_2019.tif",
+  scale = 1000
+)
+
+ee_as_raster(
+  image = evi,
+  region = region_ee,
+  dsn = "rasters/evi_2019.tif",
   scale = 1000
 )

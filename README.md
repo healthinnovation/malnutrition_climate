@@ -16,5 +16,6 @@ Precipitation | mm | 4638.3 meters | 2019 | [TerraClimate](https://developers.go
 Maximum temperature | C° | 4638.3 meters | 2019 | [TerraClimate](https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_TERRACLIMATE#bands)
 Minimum temperature | C° | 4638.3 meters | 2019 | [TerraClimate](https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_TERRACLIMATE#bands)
 Normalized Difference Vegetation Index |-| 250 meters | 2019 | [NASA LP DAAC at the USGS EROS Center](https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MOD13Q1#bands)
+Enhanced Vegetation Index |-| 250 meters | 2019 | [NASA LP DAAC at the USGS EROS Center](https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MOD13Q1#bands)
 
 
