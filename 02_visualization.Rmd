@@ -1,0 +1,94 @@
+---
+title: "Modelo predictivo de desnutrición aguda a partir de factores medioambientales"
+author: "Luis Revilla"
+date: "2022-12-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data geoespacial
+
+Utilizando Google Cloud CLI y el paquete de R llamado "rgee" para utilizar Google Earth Engine se obtuvo la data del año 2019, por meses, de la precipitación y la temperatura del Perú.
+
+```{r Google Earth Engine}
+library(raster)
+library(terra)
+library(ggplot2)
+
+precipitation <- rast("rasters/pp_2019.tif")
+temp_max <- rast("rasters/temp_max_2019.tif")
+temp_min <- rast("rasters/temp_min_2019.tif")
+```
+
+## Precipitación
+
+
+```{r precipitation, echo=FALSE}
+
+plot(precipitation, main="Precipitation IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude")
+
+
+```
+
+## Temperatura Máxima
+
+```{r temp_max, echo=FALSE}
+plot(temp_max, main="Maximum temperature IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude", )
+```
+
+## Temperatura Mínima
+
+```{r temp_min, echo=FALSE}
+plot(temp_min, main="Minimum temperature IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude", )
+```
+
+
+## Cálculo de desnutrición aguda
+```{r}
+library(tidyverse)
+library(haven)
+library(fs)
+library(readr)
+library(dplyr)
+
+
+doc_path <- path("dataset")
+variables_file <- "variables_districts.csv"
+variables_path <- path(doc_path, variables_file)
+variables <- read_csv(variables_path)
+
+child <- read_sav("D:/PUCP-UPCH/Innova Lab/Tesis/malnutrition_climate/dataset/2018/RECH6.SAV")
+house <- read_sav("D:/PUCP-UPCH/Innova Lab/Tesis/malnutrition_climate/dataset/2018/RECH0.SAV")
+
+house <- house %>%
+  select(HHID, longitudx, latitudy, HV025, HV024)
+
+child <- child %>%
+  select(HHID, HC12, HC3, HC2, HC1, HC72) %>%
+  filter(HC12 != 99998) %>%
+  mutate(weight = HC2/10, height = HC3/10, age = HC1)
+
+child <- mutate(child, malnutrition = HC12/100) %>%
+  mutate(malnutrition = case_when(
+    malnutrition < 89 ~ 1,
+    TRUE ~ 0)) 
+
+df <- 
+  child %>% 
+  inner_join(house, by = "HHID") %>%
+  mutate(area_residence =  HV025, region = HV024) %>%
+  select(-2,-3,-4,-5,-6,-13,-14)
+
+write_csv(df, "D:/PUCP-UPCH/Innova Lab/Tesis/malnutrition_climate/dataset/malnutrition.csv")
+
+```
+
+```{r}
+variables_file <- "malnutrition.csv"
+variables_path <- path(doc_path, variables_file)
+variables <- read_csv(variables_path)
+```
+
