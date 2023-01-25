@@ -13,26 +13,25 @@ region_ee <- Peru %>%
 
 # 2. Get climate information ----------------------------------------------
 pp <- ee$ImageCollection$Dataset$IDAHO_EPSCOR_TERRACLIMATE %>% 
-  ee$ImageCollection$filterDate("2019-01-01","2019-12-31") %>% 
+  ee$ImageCollection$filterDate("2014-01-01","2019-12-31") %>% 
   ee$ImageCollection$select("pr") %>% 
   ee$ImageCollection$toBands() %>% 
   ee$Image$clip(region_ee)
 
 temp_max <- ee$ImageCollection$Dataset$IDAHO_EPSCOR_TERRACLIMATE %>% 
-  ee$ImageCollection$filterDate("2019-01-01","2019-12-31") %>% 
+  ee$ImageCollection$filterDate("2014-01-01","2019-12-31") %>% 
   ee$ImageCollection$select("tmmx") %>% 
   ee$ImageCollection$toBands() %>% 
   ee$Image$clip(region_ee)
 
 temp_min <- ee$ImageCollection$Dataset$IDAHO_EPSCOR_TERRACLIMATE %>% 
-  ee$ImageCollection$filterDate("2019-01-01","2019-12-31") %>% 
+  ee$ImageCollection$filterDate("2014-01-01","2019-12-31") %>% 
   ee$ImageCollection$select("tmmn") %>% 
   ee$ImageCollection$toBands() %>% 
   ee$Image$clip(region_ee)
 
 
 # 3. Vegetation index -----------------------------------------------------
-
 get_vegatation_raster <- function(from, to, band, region, scale = 1000) {
   
   # Conditions about the times
@@ -185,19 +184,19 @@ get_vegatation_raster <- function(from, to, band, region, scale = 1000) {
       multiply(
         multiply_factor[[band]]
       )
-    return(newbase)
+    return(new_base)
   }
 }
 
 ndvi <- get_vegatation_raster(
-  from = "2019-01-01",
+  from = "2014-01-01",
   to = "2019-12-31",
   band = "NDVI",
   region = region_ee,
   scale = 1000)
 
 evi <- get_vegatation_raster(
-  from = "2019-01-01",
+  from = "2014-01-01",
   to = "2019-12-31",
   band = "EVI",
   region = region_ee,
@@ -208,34 +207,34 @@ evi <- get_vegatation_raster(
 ee_as_raster(
   image = pp,
   region = region_ee,
-  dsn = "rasters/pp_2019.tif",
+  dsn = "rasters/pp.tif",
   scale = 1000
   )
 
 ee_as_raster(
   image = temp_max,
   region = region_ee,
-  dsn = "rasters/temp_max_2019.tif",
+  dsn = "rasters/temp_max.tif",
   scale = 1000
 )
 
 ee_as_raster(
   image = temp_min,
   region = region_ee,
-  dsn = "rasters/temp_min_2019.tif",
+  dsn = "rasters/temp_min.tif",
   scale = 1000
 )
 
 ee_as_raster(
   image = ndvi,
   region = region_ee,
-  dsn = "rasters/ndvi_2019.tif",
+  dsn = "rasters/ndvi.tif",
   scale = 1000
 )
 
 ee_as_raster(
   image = evi,
   region = region_ee,
-  dsn = "rasters/evi_2019.tif",
+  dsn = "rasters/evi.tif",
   scale = 1000
 )
