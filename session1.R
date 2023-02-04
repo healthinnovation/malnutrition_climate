@@ -23,3 +23,15 @@ axis(side = 1, at = seq(0, 11, 1))
 axis(side = 2, at = seq(0, 16, 2))
 
 cancer$fit <- ifelse(cancer$bmi > 18.5 & cancer$bmi < 25, 1, 0)
+
+### Running a hypothesis test
+
+cancer_var <- cancer$cancer
+
+overweight <- ifelse(cancer$bmi >= 25, 1, 0)
+
+table(overweight)
+
+overweight
+
+chisq.test(x = overweight, y = cancer_var)

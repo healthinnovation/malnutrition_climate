@@ -1,0 +1,202 @@
+---
+title: "Modelo predictivo de desnutrición aguda a partir de factores medioambientales"
+author: "Luis Revilla"
+date: "2022-12-23"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data geoespacial
+
+Utilizando Google Cloud CLI y el paquete de R llamado "rgee" para utilizar Google Earth Engine se obtuvo la data del año 2019, por meses, de la precipitación y la temperatura del Perú.
+
+```{r Google Earth Engine, echo = FALSE}
+library(raster)
+library(terra)
+library(ggplot2)
+
+precipitation <- rast("rasters/pp_2019.tif")
+temp_max <- rast("rasters/temp_max_2019.tif")
+temp_min <- rast("rasters/temp_min_2019.tif")
+```
+
+## Precipitación
+
+
+```{r precipitation, echo=FALSE}
+
+plot(precipitation, main="Precipitation IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude")
+
+
+```
+
+## Temperatura Máxima
+
+```{r temp_max, echo=FALSE}
+plot(temp_max, main="Maximum temperature IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude", )
+```
+
+## Temperatura Mínima
+
+```{r temp_min, echo=FALSE}
+plot(temp_min, main="Minimum temperature IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude", )
+```
+
+## Feature engineering
+
+### Carga de las librerías para manipulación de la data descargada de ENDES
+
+```{r, echo = FALSE}
+library(tidyverse)
+library(haven)
+library(fs)
+library(readr)
+library(dplyr)
+library(purrr)
+library(ggplot2)
+```
+
+
+## Obtención de los datasets a nivel de niño y hogar para los años 2014-2019
+
+```{r, echo = FALSE}
+path_2014 <- path("dataset/2014/malnutrition_2014.csv")
+malnutrition_2014 <- read_csv(path_2014) %>%
+  mutate(HHID = as.character(HHID)) # En este año el HHID era numérico
+
+path_2015 <- path("dataset/2015/malnutrition_2015.csv")
+malnutrition_2015 <- read_csv(path_2015)
+
+path_2016 <- path("dataset/2016/malnutrition_2016.csv")
+malnutrition_2016 <- read_csv(path_2016)
+
+path_2017 <- path("dataset/2017/malnutrition_2017.csv")
+malnutrition_2017 <- read_csv(path_2017)
+
+path_2018 <- path("dataset/2018/malnutrition_2018.csv")
+malnutrition_2018 <- read_csv(path_2018)
+
+path_2019 <- path("dataset/2019/malnutrition_2019.csv")
+malnutrition_2019 <- read_csv(path_2019)
+
+```
+
+## Feature engineering de los dataset climáticos (IDAHO) (radio de 5 km)
+
+```{r, echo = FALSE}
+dataset <- load("variables.RData") 
+
+# Para cada dataset climatológico del 2014, cambiar el identificador
+
+lista_ndvi[[1]] <- lista_ndvi[[1]] %>%
+  mutate(HHID = as.character(HHID))
+
+lista_pp[[1]] <- lista_pp[[1]] %>%
+  mutate(HHID = as.character(HHID))
+
+lista_savi[[1]] <- lista_savi[[1]] %>%
+  mutate(HHID = as.character(HHID))
+
+lista_tmax[[1]] <- lista_tmax[[1]] %>%
+  mutate(HHID = as.character(HHID))
+
+lista_tmin[[1]] <- lista_tmin[[1]] %>%
+  mutate(HHID = as.character(HHID))
+
+# Creamos una lista incluyendo todos los dataset a nivel de niño y hogar (ENDES)
+
+malnutrition <- list("2014" = malnutrition_2014, "2015" = malnutrition_2015, "2016" = malnutrition_2016, "2017" = malnutrition_2017, "2018" = malnutrition_2018, "2019" = malnutrition_2019) %>% 
+  bind_rows(.id = "year")
+
+# Modificamos los nombres de cada dataset climatológico para que coincida
+# con los años del ENDES (radio de 5 km)
+
+names(lista_ndvi)= c("2014", "2015", "2016", "2017", "2018", "2019")
+names(lista_pp) = c("2014", "2015", "2016", "2017", "2018", "2019")
+names(lista_savi) = c("2014", "2015", "2016", "2017", "2018", "2019")
+names(lista_tmax) = c("2014", "2015", "2016", "2017", "2018", "2019")
+names(lista_tmin) = c("2014", "2015", "2016", "2017", "2018", "2019")
+
+lista_ndvi <- lista_ndvi %>%
+  bind_rows(.id = "year")
+
+lista_pp <- lista_pp %>%
+  bind_rows(.id = "year")
+
+lista_savi <- lista_savi %>%
+  bind_rows(.id = "year")
+
+lista_tmax <- lista_tmax %>%
+  bind_rows(.id = "year")
+
+lista_tmin <- lista_tmin %>%
+  bind_rows(.id = "year")
+
+
+```
+
+## Merge de los datasets (ENDES y IDAHO) para variables climatológicas y de niño
+
+```{r}
+lista_full <- lista_ndvi %>%
+  inner_join(lista_pp, by = c("year", "HHID")) %>%
+  inner_join(lista_savi, by = c("year", "HHID")) %>%
+  inner_join(lista_tmax, by = c("year", "HHID")) %>%
+  inner_join(lista_tmin, by = c("year", "HHID"))
+
+malnutrition <- malnutrition %>%
+  inner_join(lista_full, by = c("HHID","year"))
+
+malnutrition_path <- paste("malnutrition_final.csv", sep = "")
+
+write_csv(malnutrition, path(doc_path,malnutrition_path))  
+```
+
+## Data exploration
+
+```{r, echo = FALSE}
+malnutrition_final <- read_csv("dataset/malnutrition_final.csv") 
+
+ggplot() + geom_histogram(data = malnutrition_final, aes(x = malnutrition_final$malnutrition), bins = 2, fill = "darkgreen", col = "black") +
+
+labs(x = "Children with acute malnutrition", y = "Frequency") +
+
+scale_x_continuous(breaks = seq(from = 0, to = 1, by = 1)) + theme_bw()
+```
+
+
+```{r}
+ggplot() + geom_histogram(data = malnutrition_final, aes(x = malnutrition_final$region), bins = 25, fill = "darkgreen", col = "black") +
+
+labs(x = "Region where children belong to", y = "Frequency") +
+
+scale_x_continuous(breaks = seq(from = 0, to = 25, by = 1)) + theme_bw()
+```
+```{r}
+ggplot() + geom_histogram(data = malnutrition_final, aes(x = malnutrition_final$area_residence), bins = 2, fill = "darkgreen", col = "black") +
+
+labs(x = "Area of residence", y = "Frequency") +
+
+scale_x_continuous(breaks = seq(from = 0, to = 2, by = 1)) + theme_bw()
+```
+```{r}
+library(raster)
+
+library(scales)  ## for the alpha function below
+
+pe <- getData("GADM", country = "PER", level = 1,
+             path = "dataset/")
+
+plot(pe, border = "gray", lwd = 0.5)
+points(malnutrition_final$longitudx, malnutrition_final$latitudy, pch = 16,
+       col = alpha("red", 0.01))
+```
+```{r}
+coordinates(malnutrition_final) <- ~longitudx+latitudy
+```
+
