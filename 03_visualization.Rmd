@@ -200,3 +200,17 @@ points(malnutrition_final$longitudx, malnutrition_final$latitudy, pch = 16,
 coordinates(malnutrition_final) <- ~longitudx+latitudy
 ```
 
+```{r}
+
+malnutrition_14 <- malnutrition_final %>%
+  filter(year==2014) %>%
+	mutate(NDVI = rowSums(.[,12:24])) %>%
+  mutate(NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0)) %>% 
+  select(malnutrition, longitudx, latitudy, area_residence, region, year,
+         HHID, weight, height, age, order, NDVI)
+
+```
+
