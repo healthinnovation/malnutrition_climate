@@ -111,7 +111,8 @@ lista_tmin[[1]] <- lista_tmin[[1]] %>%
 # Creamos una lista incluyendo todos los dataset a nivel de niño y hogar (ENDES)
 
 malnutrition <- list("2014" = malnutrition_2014, "2015" = malnutrition_2015, "2016" = malnutrition_2016, "2017" = malnutrition_2017, "2018" = malnutrition_2018, "2019" = malnutrition_2019) %>% 
-  bind_rows(.id = "year")
+  bind_rows(.id = "year") %>%
+  mutate(direct = paste(as.character(longitudx), as.character(latitudy)))
 
 # Modificamos los nombres de cada dataset climatológico para que coincida
 # con los años del ENDES (radio de 5 km)
@@ -149,10 +150,22 @@ lista_full <- lista_ndvi %>%
   inner_join(lista_tmax, by = c("year", "HHID")) %>%
   inner_join(lista_tmin, by = c("year", "HHID"))
 
+HHID_XD <- lista_full %>%
+  select(HHID)
+
+coordinates <- malnutrition %>%
+  inner_join(HHID_XD, by = "HHID") %>%
+  transmute(HHID, direct = paste(as.character(longitudx), as.character(latitudy)))
+
+lista_full <- lista_full %>%
+  inner_join(coordinates, by = "HHID")
+
 malnutrition <- malnutrition %>%
-  inner_join(lista_full, by = c("HHID","year"))
+  inner_join(lista_full, by = c("direct","year"))
 
 malnutrition_path <- paste("malnutrition_final.csv", sep = "")
+
+doc_path <- ("dataset")
 
 write_csv(malnutrition, path(doc_path,malnutrition_path))  
 ```
@@ -198,5 +211,44 @@ points(malnutrition_final$longitudx, malnutrition_final$latitudy, pch = 16,
 ```
 ```{r}
 coordinates(malnutrition_final) <- ~longitudx+latitudy
+```
+
+```{r}
+malnutrition_14 <- malnutrition_final %>%
+  filter(year==2014) %>%
+	mutate(NDVI = rowMeans(.[,12:24]),
+	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.0_EVI"):
+	                          which(names(malnutrition_final)=="mean.11_EVI")]),
+	       
+	       PP = rowSums(.[,which(names(malnutrition_final)=="mean.201401_pr"):
+	                          which(names(malnutrition_final)=="mean.201412_pr")]),
+	       
+	       TMAX = rowMeans(.[,which(names(malnutrition_final)=="mean.201401_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201412_tmmx")])/10,
+	       
+	       TMIN = rowMeans(.[,which(names(malnutrition_final)=="mean.201401_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201412_tmmn")])/10)%>%
+  mutate(
+    NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI = case_when(
+		SAVI >=0 & SAVI <=0.3 ~ 1, 
+		SAVI > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP = case_when(
+    PP <= 500 ~ 0,
+    PP < 500 & PP <= 1000 ~ 1,
+		PP > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP = TMAX - TMIN) %>% 
+  
+  select(year, HHID, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
+
 ```
 
