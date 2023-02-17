@@ -214,9 +214,17 @@ coordinates(malnutrition_final) <- ~longitudx+latitudy
 ```
 
 ```{r}
+
+
+malnutrition_final <- read_csv("dataset/malnutrition_final.csv") 
+
+## 2014
+
 malnutrition_14 <- malnutrition_final %>%
   filter(year==2014) %>%
-	mutate(NDVI = rowMeans(.[,12:24]),
+	mutate(NDVI = rowMeans(.[,which(names(malnutrition_final)=="mean.0_NDVI"):
+	                          which(names(malnutrition_final)=="mean.11_NDVI")]),
+	       
 	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.0_EVI"):
 	                          which(names(malnutrition_final)=="mean.11_EVI")]),
 	       
@@ -247,8 +255,428 @@ malnutrition_14 <- malnutrition_final %>%
 		
 		TGAP = TMAX - TMIN) %>% 
   
-  select(year, HHID, malnutrition, longitudx, latitudy, area_residence, region, 
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
           weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
 
+## 2015
+
+malnutrition_15 <- malnutrition_final %>%
+  filter(year==2015) %>%
+	mutate(NDVI = rowMeans(.[,which(names(malnutrition_final)=="mean.12_NDVI"):
+	                          which(names(malnutrition_final)=="mean.23_NDVI")]),
+	       
+	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.12_EVI"):
+	                          which(names(malnutrition_final)=="mean.23_EVI")]),
+	       
+	       PP = rowSums(.[,which(names(malnutrition_final)=="mean.201501_pr"):
+	                          which(names(malnutrition_final)=="mean.201512_pr")]),
+	       
+	       TMAX = rowMeans(.[,which(names(malnutrition_final)=="mean.201501_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201512_tmmx")])/10,
+	       
+	       TMIN = rowMeans(.[,which(names(malnutrition_final)=="mean.201501_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201512_tmmn")])/10)%>%
+  mutate(
+    NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI = case_when(
+		SAVI >=0 & SAVI <=0.3 ~ 1, 
+		SAVI > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP = case_when(
+    PP <= 500 ~ 0,
+    PP < 500 & PP <= 1000 ~ 1,
+		PP > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP = TMAX - TMIN) %>% 
+  
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
+
+
+## 2016
+
+malnutrition_16 <- malnutrition_final %>%
+  filter(year==2016) %>%
+	mutate(NDVI = rowMeans(.[,which(names(malnutrition_final)=="mean.24_NDVI"):
+	                          which(names(malnutrition_final)=="mean.35_NDVI")]),
+	       
+	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.24_EVI"):
+	                          which(names(malnutrition_final)=="mean.35_EVI")]),
+	       
+	       PP = rowSums(.[,which(names(malnutrition_final)=="mean.201601_pr"):
+	                          which(names(malnutrition_final)=="mean.201612_pr")]),
+	       
+	       TMAX = rowMeans(.[,which(names(malnutrition_final)=="mean.201601_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201612_tmmx")])/10,
+	       
+	       TMIN = rowMeans(.[,which(names(malnutrition_final)=="mean.201601_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201612_tmmn")])/10)%>%
+  mutate(
+    NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI = case_when(
+		SAVI >=0 & SAVI <=0.3 ~ 1, 
+		SAVI > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP = case_when(
+    PP <= 500 ~ 0,
+    PP < 500 & PP <= 1000 ~ 1,
+		PP > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP = TMAX - TMIN) %>% 
+  
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
+
+## 2017
+malnutrition_17 <- malnutrition_final %>%
+  filter(year==2017) %>%
+	mutate(NDVI = rowMeans(.[,which(names(malnutrition_final)=="mean.36_NDVI"):
+	                          which(names(malnutrition_final)=="mean.47_NDVI")]),
+	       
+	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.36_EVI"):
+	                          which(names(malnutrition_final)=="mean.47_EVI")]),
+	       
+	       PP = rowSums(.[,which(names(malnutrition_final)=="mean.201701_pr"):
+	                          which(names(malnutrition_final)=="mean.201712_pr")]),
+	       
+	       TMAX = rowMeans(.[,which(names(malnutrition_final)=="mean.201701_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201712_tmmx")])/10,
+	       
+	       TMIN = rowMeans(.[,which(names(malnutrition_final)=="mean.201701_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201712_tmmn")])/10)%>%
+  mutate(
+    NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI = case_when(
+		SAVI >=0 & SAVI <=0.3 ~ 1, 
+		SAVI > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP = case_when(
+    PP <= 500 ~ 0,
+    PP < 500 & PP <= 1000 ~ 1,
+		PP > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP = TMAX - TMIN) %>% 
+  
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
+
+
+## 2018
+malnutrition_18 <- malnutrition_final %>%
+  filter(year==2018) %>%
+	mutate(NDVI = rowMeans(.[,which(names(malnutrition_final)=="mean.48_NDVI"):
+	                          which(names(malnutrition_final)=="mean.59_NDVI")]),
+	       
+	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.48_EVI"):
+	                          which(names(malnutrition_final)=="mean.59_EVI")]),
+	       
+	       PP = rowSums(.[,which(names(malnutrition_final)=="mean.201801_pr"):
+	                          which(names(malnutrition_final)=="mean.201812_pr")]),
+	       
+	       TMAX = rowMeans(.[,which(names(malnutrition_final)=="mean.201801_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201812_tmmx")])/10,
+	       
+	       TMIN = rowMeans(.[,which(names(malnutrition_final)=="mean.201801_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201812_tmmn")])/10)%>%
+  mutate(
+    NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI = case_when(
+		SAVI >=0 & SAVI <=0.3 ~ 1, 
+		SAVI > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP = case_when(
+    PP <= 500 ~ 0,
+    PP < 500 & PP <= 1000 ~ 1,
+		PP > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP = TMAX - TMIN) %>% 
+  
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
+
+
+## 2019
+malnutrition_19 <- malnutrition_final %>%
+  filter(year==2019) %>%
+	mutate(NDVI = rowMeans(.[,which(names(malnutrition_final)=="mean.60_NDVI"):
+	                          which(names(malnutrition_final)=="mean.71_NDVI")]),
+	       
+	       SAVI = rowMeans(.[,which(names(malnutrition_final)=="mean.60_EVI"):
+	                          which(names(malnutrition_final)=="mean.71_EVI")]),
+	       
+	       PP = rowSums(.[,which(names(malnutrition_final)=="mean.201901_pr"):
+	                          which(names(malnutrition_final)=="mean.201912_pr")]),
+	       
+	       TMAX = rowMeans(.[,which(names(malnutrition_final)=="mean.201901_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201912_tmmx")])/10,
+	       
+	       TMIN = rowMeans(.[,which(names(malnutrition_final)=="mean.201901_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201912_tmmn")])/10)%>%
+  mutate(
+    NDVI = case_when(
+		NDVI >=0 & NDVI <=0.3 ~ 1, 
+		NDVI > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI = case_when(
+		SAVI >=0 & SAVI <=0.3 ~ 1, 
+		SAVI > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP = case_when(
+    PP <= 500 ~ 0,
+    PP < 500 & PP <= 1000 ~ 1,
+		PP > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP = TMAX - TMIN) %>% 
+  
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI, SAVI, PP, TGAP, TMAX, TMIN)
+
+```
+
+
+
+```{r}
+malnutrition_final <- read_csv("dataset/malnutrition_final.csv") 
+
+## 2014
+
+malnutrition <- malnutrition_final %>%
+	mutate(NDVI_14 = rowMeans(.[,which(names(malnutrition_final)=="mean.0_NDVI"):
+	                          which(names(malnutrition_final)=="mean.11_NDVI")]),
+	       
+	       SAVI_14 = rowMeans(.[,which(names(malnutrition_final)=="mean.0_EVI"):
+	                          which(names(malnutrition_final)=="mean.11_EVI")]),
+	       
+	       PP_14 = rowSums(.[,which(names(malnutrition_final)=="mean.201401_pr"):
+	                          which(names(malnutrition_final)=="mean.201412_pr")]),
+	       
+	       TMAX_14 = rowMeans(.[,which(names(malnutrition_final)=="mean.201401_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201412_tmmx")])/10,
+	       
+	       TMIN_14 = rowMeans(.[,which(names(malnutrition_final)=="mean.201401_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201412_tmmn")])/10,
+	       
+	       NDVI_15 = rowMeans(.[,which(names(malnutrition_final)=="mean.12_NDVI"):
+	                          which(names(malnutrition_final)=="mean.23_NDVI")]),
+	       
+	       SAVI_15 = rowMeans(.[,which(names(malnutrition_final)=="mean.12_EVI"):
+	                          which(names(malnutrition_final)=="mean.23_EVI")]),
+	       
+	       PP_15 = rowSums(.[,which(names(malnutrition_final)=="mean.201501_pr"):
+	                          which(names(malnutrition_final)=="mean.201512_pr")]),
+	       
+	       TMAX_15 = rowMeans(.[,which(names(malnutrition_final)=="mean.201501_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201512_tmmx")])/10,
+	       
+	       TMIN_15 = rowMeans(.[,which(names(malnutrition_final)=="mean.201501_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201512_tmmn")])/10,
+	       
+	       NDVI_16 = rowMeans(.[,which(names(malnutrition_final)=="mean.24_NDVI"):
+	                          which(names(malnutrition_final)=="mean.35_NDVI")]),
+	       
+	       SAVI_16 = rowMeans(.[,which(names(malnutrition_final)=="mean.24_EVI"):
+	                          which(names(malnutrition_final)=="mean.35_EVI")]),
+	       
+	       PP_16 = rowSums(.[,which(names(malnutrition_final)=="mean.201601_pr"):
+	                          which(names(malnutrition_final)=="mean.201612_pr")]),
+	       
+	       TMAX_16 = rowMeans(.[,which(names(malnutrition_final)=="mean.201601_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201612_tmmx")])/10,
+	       
+	       TMIN_16 = rowMeans(.[,which(names(malnutrition_final)=="mean.201601_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201612_tmmn")])/10,
+	       
+	       NDVI_17 = rowMeans(.[,which(names(malnutrition_final)=="mean.36_NDVI"):
+	                          which(names(malnutrition_final)=="mean.47_NDVI")]),
+	       
+	       SAVI_17 = rowMeans(.[,which(names(malnutrition_final)=="mean.36_EVI"):
+	                          which(names(malnutrition_final)=="mean.47_EVI")]),
+	       
+	       PP_17 = rowSums(.[,which(names(malnutrition_final)=="mean.201701_pr"):
+	                          which(names(malnutrition_final)=="mean.201712_pr")]),
+	       
+	       TMAX_17 = rowMeans(.[,which(names(malnutrition_final)=="mean.201701_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201712_tmmx")])/10,
+	       
+	       TMIN_17 = rowMeans(.[,which(names(malnutrition_final)=="mean.201701_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201712_tmmn")])/10,
+	       
+	       NDVI_18 = rowMeans(.[,which(names(malnutrition_final)=="mean.48_NDVI"):
+	                          which(names(malnutrition_final)=="mean.59_NDVI")]),
+	       
+	       SAVI_18 = rowMeans(.[,which(names(malnutrition_final)=="mean.48_EVI"):
+	                          which(names(malnutrition_final)=="mean.59_EVI")]),
+	       
+	       PP_18 = rowSums(.[,which(names(malnutrition_final)=="mean.201801_pr"):
+	                          which(names(malnutrition_final)=="mean.201812_pr")]),
+	       
+	       TMAX_18 = rowMeans(.[,which(names(malnutrition_final)=="mean.201801_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201812_tmmx")])/10,
+	       
+	       TMIN_18 = rowMeans(.[,which(names(malnutrition_final)=="mean.201801_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201812_tmmn")])/10,
+	       
+	       NDVI_19 = rowMeans(.[,which(names(malnutrition_final)=="mean.60_NDVI"):
+	                          which(names(malnutrition_final)=="mean.71_NDVI")]),
+	       
+	       SAVI_19 = rowMeans(.[,which(names(malnutrition_final)=="mean.60_EVI"):
+	                          which(names(malnutrition_final)=="mean.71_EVI")]),
+	       
+	       PP_19 = rowSums(.[,which(names(malnutrition_final)=="mean.201901_pr"):
+	                          which(names(malnutrition_final)=="mean.201912_pr")]),
+	       
+	       TMAX_19 = rowMeans(.[,which(names(malnutrition_final)=="mean.201901_tmmx"):
+	                          which(names(malnutrition_final)=="mean.201912_tmmx")])/10,
+	       
+	       TMIN_19 = rowMeans(.[,which(names(malnutrition_final)=="mean.201901_tmmn"):
+	                          which(names(malnutrition_final)=="mean.201912_tmmn")])/10)%>%
+  
+  
+  mutate(
+    NDVI_14 = case_when(
+		NDVI_14 >=0 & NDVI_14 <=0.3 ~ 1, 
+		NDVI_14 > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI_14 = case_when(
+		SAVI_14 >=0 & SAVI_14 <=0.3 ~ 1, 
+		SAVI_14 > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP_14 = case_when(
+    PP_14 <= 500 ~ 0,
+    PP_14 < 500 & PP_14 <= 1000 ~ 1,
+		PP_14 > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP_14 = TMAX_14 - TMIN_14,
+		
+		NDVI_15 = case_when(
+		NDVI_15 >=0 & NDVI_15 <=0.3 ~ 1, 
+		NDVI_15 > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI_15 = case_when(
+		SAVI_15 >=0 & SAVI_15 <=0.3 ~ 1, 
+		SAVI_15 > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP_15 = case_when(
+    PP_15 <= 500 ~ 0,
+    PP_15 < 500 & PP_15 <= 1000 ~ 1,
+		PP_15 > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP_15 = TMAX_15 - TMIN_15,
+		
+		NDVI_16 = case_when(
+		NDVI_16 >=0 & NDVI_16 <=0.3 ~ 1, 
+		NDVI_16 > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI_16 = case_when(
+		SAVI_16 >=0 & SAVI_16 <=0.3 ~ 1, 
+		SAVI_16 > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP_16 = case_when(
+    PP_16 <= 500 ~ 0,
+    PP_16 < 500 & PP_16 <= 1000 ~ 1,
+		PP_16 > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP_16 = TMAX_16 - TMIN_16,
+		
+		NDVI_17 = case_when(
+		NDVI_17 >=0 & NDVI_17 <=0.3 ~ 1, 
+		NDVI_17 > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI_17 = case_when(
+		SAVI_17 >=0 & SAVI_17 <=0.3 ~ 1, 
+		SAVI_17 > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP_17 = case_when(
+    PP_17 <= 500 ~ 0,
+    PP_17 < 500 & PP_17 <= 1000 ~ 1,
+		PP_17 > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP_17 = TMAX_17 - TMIN_17,
+		
+		NDVI_18 = case_when(
+		NDVI_18 >=0 & NDVI_18 <=0.3 ~ 1, 
+		NDVI_18 > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI_18 = case_when(
+		SAVI_18 >=0 & SAVI_18 <=0.3 ~ 1, 
+		SAVI_18 > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP_18 = case_when(
+    PP_18 <= 500 ~ 0,
+    PP_18 < 500 & PP_18 <= 1000 ~ 1,
+		PP_18 > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP_18 = TMAX_18 - TMIN_18,
+		
+		NDVI_19 = case_when(
+		NDVI_19 >=0 & NDVI_19 <=0.3 ~ 1, 
+		NDVI_19 > 0.3 ~ 2,
+		TRUE ~ 0),
+		
+		SAVI_19 = case_when(
+		SAVI_19 >=0 & SAVI_19 <=0.3 ~ 1, 
+		SAVI_19 > 0.3 ~ 2,
+		TRUE ~ 0), 
+		
+		PP_19 = case_when(
+    PP_19 <= 500 ~ 0,
+    PP_19 < 500 & PP_19 <= 1000 ~ 1,
+		PP_19 > 1000  ~ 2, 
+		TRUE ~ 3), 
+		
+		TGAP_19 = TMAX_19 - TMIN_19) %>% 
+  
+  transmute(year, HHID = HHID.x, malnutrition, longitudx, latitudy, area_residence, region, 
+          weight, height, age, order, NDVI_14, NDVI_15, NDVI_16, NDVI_17, NDVI_18, NDVI_19, SAVI_14, SAVI_15, SAVI_16, SAVI_17, SAVI_18, SAVI_19, 
+          PP_14, PP_15, PP_16, PP_17, PP_18, PP_19, TGAP_14, TGAP_15, TGAP_16, TGAP_17, TGAP_18, TGAP_19, TMAX_14, TMAX_15, TMAX_16, TMAX_17,
+          TMAX_18, TMAX_19, TMIN_14, TMIN_15, TMIN_16, TMIN_17, TMIN_18, TMIN_19)
+```
+
+```{r}
+malnutrition %>%
+  group_by(year) %>%
+  count(malnutrition)
 ```
 
