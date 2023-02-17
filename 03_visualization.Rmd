@@ -215,6 +215,7 @@ coordinates(malnutrition_final) <- ~longitudx+latitudy
 
 ```{r}
 
+<<<<<<< HEAD
 
 malnutrition_final <- read_csv("dataset/malnutrition_final.csv") 
 
@@ -679,4 +680,5 @@ malnutrition %>%
   group_by(year) %>%
   count(malnutrition)
 ```
+
 
