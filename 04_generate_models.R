@@ -1,0 +1,315 @@
+library(tidyverse)
+library(haven)
+library(fs)
+library(readr)
+library(dplyr)
+library(purrr)
+library(ggplot2)
+# Cargar el paquete randomForest
+library(randomForest)
+library(reshape2)
+library(caret)
+
+
+############2014->2015################
+
+
+# Cargar los datos
+datos <- malnutrition_14 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_15 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
+
+
+# Entrenar el modelo de Random Forest
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 70, importance = TRUE, do.trace = 10)
+
+summary(modelo_rf)
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+# Ver los resultados de la predicción en los datos de prueba
+prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.3, 1, 0)
+
+
+# Generar la matriz de confusión
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisión del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusión 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
+# Guardar el modelo 14->15
+
+saveRDS(modelo_rf, "modelo_pred15.rds")
+
+
+
+####################2014,2015->2016##############################
+
+# Cargar los datos
+
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_16 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 70, importance = TRUE, do.trace = 10)
+
+prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.3, 1, 0)
+
+# Generar la matriz de confusión
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisión del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusión 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
+# Guardar el modelo 14,15->16
+
+saveRDS(modelo_rf, "modelo_pred16.rds")
+
+
+
+
+####################2014,2015,2016->2017##############################
+
+# Cargar los datos
+
+
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+#datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_17 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+#datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 100, importance = TRUE, do.trace = 10)
+
+prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.3, 1, 0)
+
+# Generar la matriz de confusión
+
+true_values <- data.frame(datos_prueba$malnutrition) 
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisión del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusión 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
+# Guardar el modelo 14,15,16->17
+
+saveRDS(modelo_rf, "modelo_pred17.rds")
+
+
+
+####################2014,2015,2016,2017->2018##############################
+
+# Cargar los datos
+
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+#datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_18 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+#datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 70, importance = TRUE, do.trace = 10)
+
+prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.3, 1, 0)
+
+# Generar la matriz de confusión
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisión del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusión 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
+# Guardar el modelo 14,15,16,17->18
+
+saveRDS(modelo_rf, "modelo_pred18.rds")
+
+
+
+####################2014,2015,2016,2017,2018->2019##############################
+
+# Cargar los datos
+
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17, malnutrition_18)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+#datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_19 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+#datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 100, importance = TRUE, do.trace = 10)
+
+prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion_c <- ifelse(prediccion > 0.3, 1, 0)
+
+# Generar la matriz de confusión
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion_c))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisión del modelo
+precision <- sum(prediccion_c == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusión 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
+
+# Guardar el modelo 14,15,16,17,18->19
+
+saveRDS(modelo_rf, "modelo_pred19.rds")
