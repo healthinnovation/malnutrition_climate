@@ -1,10 +1,14 @@
 ---
 title: "Modelo predictivo de desnutrición aguda a partir de factores medioambientales"
 author: "Luis Revilla"
-date: "2022-12-23"
+date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
-  html_document: default
-  pdf_document: default
+  html_document: 
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    toc_depth: 3    
 ---
 
 ```{r setup, include=FALSE}
@@ -28,7 +32,7 @@ temp_min <- rast("rasters/temp_min_2019.tif")
 ## Precipitación
 
 
-```{r precipitation, echo=FALSE}
+```{r precipitation}
 
 plot(precipitation, main="Precipitation IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude")
 
@@ -37,13 +41,13 @@ plot(precipitation, main="Precipitation IDAHO Terraclimate - Peru 2019", xlab="L
 
 ## Temperatura Máxima
 
-```{r temp_max, echo=FALSE}
+```{r temp_max}
 plot(temp_max, main="Maximum temperature IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude", )
 ```
 
 ## Temperatura Mínima
 
-```{r temp_min, echo=FALSE}
+```{r temp_min}
 plot(temp_min, main="Minimum temperature IDAHO Terraclimate - Peru 2019", xlab="Longitude", ylab="Latitude", )
 ```
 
@@ -51,7 +55,7 @@ plot(temp_min, main="Minimum temperature IDAHO Terraclimate - Peru 2019", xlab="
 
 ### Carga de las librerías para manipulación de la data descargada de ENDES
 
-```{r, echo = FALSE}
+```{r packages, warning = FALSE, include = FALSE}
 library(tidyverse)
 library(haven)
 library(fs)
@@ -69,7 +73,7 @@ library(caret)
 
 ## Obtención de los datasets a nivel de niño y hogar para los años 2014-2019
 
-```{r, echo = FALSE}
+```{r, eval = FALSE}
 path_2014 <- path("dataset/2014/malnutrition_2014.csv")
 malnutrition_2014 <- read_csv(path_2014) %>%
   mutate(HHID = as.character(HHID)) # En este año el HHID era numérico
@@ -93,7 +97,7 @@ malnutrition_2019 <- read_csv(path_2019)
 
 ## Feature engineering de los dataset climáticos (IDAHO) (radio de 5 km)
 
-```{r, echo = FALSE}
+```{r, eval = FALSE}
 dataset <- load("variables.RData") 
 
 # Para cada dataset climatológico del 2014, cambiar el identificador
@@ -148,7 +152,7 @@ lista_tmin <- lista_tmin %>%
 
 ## Merge de los datasets (ENDES y IDAHO) para variables climatológicas y de niño
 
-```{r, echo = FALSE}
+```{r, eval = FALSE}
 lista_full <- lista_ndvi %>%
   inner_join(lista_pp, by = c("year", "HHID")) %>%
   inner_join(lista_savi, by = c("year", "HHID")) %>%
@@ -177,7 +181,7 @@ write_csv(malnutrition, path(doc_path,malnutrition_path))
 
 ## Data exploration
 
-```{r, echo = FALSE}
+```{r, warning = FALSE, out.width = '95%', fig.cap = 'Figure 1.1 Frequency of children with acute malnutrition in Peru 2014-2019'}
 malnutrition_final <- read_csv("dataset/malnutrition_final.csv") 
 
 ggplot() + geom_histogram(data = malnutrition_final, aes(x = malnutrition_final$malnutrition), bins = 2, fill = "darkgreen", col = "black") +
@@ -188,14 +192,15 @@ scale_x_continuous(breaks = seq(from = 0, to = 1, by = 1)) + theme_bw()
 ```
 
 
-```{r}
+```{r, warning = FALSE, out.width = '95%', fig.cap = 'Figure 1.2 Frequency of children with acute malnutrition according to the region where they belong 2014-2019'}
 ggplot() + geom_histogram(data = malnutrition_final, aes(x = malnutrition_final$region), bins = 25, fill = "darkgreen", col = "black") +
 
 labs(x = "Region where children belong to", y = "Frequency") +
 
 scale_x_continuous(breaks = seq(from = 0, to = 25, by = 1)) + theme_bw()
 ```
-```{r}
+
+```{r, warning = FALSE, out.width = '95%', fig.cap = 'Figure 1.3 Frequency of children with acute malnutrition - Peruvian map'}
 ggplot() + geom_histogram(data = malnutrition_final, aes(x = malnutrition_final$area_residence), bins = 2, fill = "darkgreen", col = "black") +
 
 labs(x = "Area of residence", y = "Frequency") +
@@ -218,6 +223,28 @@ points(malnutrition_final$longitudx, malnutrition_final$latitudy, pch = 16,
 coordinates(malnutrition_final) <- ~longitudx+latitudy
 ```
 
+```{r, echo = FALSE, warning = FALSE, include = FALSE}
+path_2014 <- path("dataset/malnutrition_final14.csv")
+malnutrition_14 <- read_csv(path_2014) %>%
+  mutate(HHID = as.character(HHID)) # En este a?o el HHID era num?rico
+
+path_2015 <- path("dataset/malnutrition_final15.csv")
+malnutrition_15 <- read_csv(path_2015)
+
+path_2016 <- path("dataset/malnutrition_final16.csv")
+malnutrition_16 <- read_csv(path_2016)
+
+path_2017 <- path("dataset/malnutrition_final17.csv")
+malnutrition_17 <- read_csv(path_2017)
+
+path_2018 <- path("dataset/malnutrition_final18.csv")
+malnutrition_18 <- read_csv(path_2018)
+
+path_2019 <- path("dataset/malnutrition_final19.csv")
+malnutrition_19 <- read_csv(path_2019)
+```
+
+
 #Training by year
 
 ##2014-2015-2016-2017-2018
@@ -225,55 +252,299 @@ coordinates(malnutrition_final) <- ~longitudx+latitudy
 
 ###Random Forest modelling 2014 for testing in 2015
 
-```{r}
+```{r, out.width = '95%', fig.cap = 'Figure 1.4 Importance of variables trained in the model for 2015 out of sample validation'}
 modelo_15<-readRDS("modelo_pred15.rds")
 
+# Cargar los datos
+datos <- malnutrition_14 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_15 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+prediccion <- predict(modelo_15, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.2, 1, 0)
+
+
+# Generar la matriz de confusi?n
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisi?n del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusi?n 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
 # Ver la importancia de las variables predictoras
-varImpPlot(modelo_15)
+#varImpPlot(modelo_15)
 #importance(modelo_15)
 
 ```
 ### Se observa que para modelos de random forest, al menos de 2014 a 2015, la validación out of sample demuestra que lo hallado no alcanza los resultados esperados. Se procederá a juntar dos años y probar con 2016.
 
 ### 2014 and 2015 for 2016
-```{r}
+```{r, out.width = '95%', fig.cap = 'Figure 1.5 Importance of variables trained in the model for 2016 out of sample validation'}
 modelo_16<-readRDS("modelo_pred16.rds")
 
+# Cargar los datos
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_16 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+prediccion <- predict(modelo_16, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.2, 1, 0)
+
+
+# Generar la matriz de confusi?n
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisi?n del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusi?n 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
 # Ver la importancia de las variables predictoras
-varImpPlot(modelo_16)
+#varImpPlot(modelo_16)
+#importance(modelo_16)
 ```
 
 ### 2014, 2015 and 2016 for 2017
-```{r}
+```{r, out.width = '95%', fig.cap = 'Figure 1.6 Importance of variables trained in the model for 2017 out of sample validation'}
 modelo_17<-readRDS("modelo_pred17.rds")
 
+# Cargar los datos
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_17 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+prediccion <- predict(modelo_17, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.2, 1, 0)
+
+
+# Generar la matriz de confusi?n
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisi?n del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusi?n 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
 # Ver la importancia de las variables predictoras
-varImpPlot(modelo_17)
+#varImpPlot(modelo_17)
+#importance(modelo_17)
 ```
 
 ### 2014, 2015, 2016 and 2017 for 2018
 
-```{r}
+```{r, out.width = '95%', fig.cap = 'Figure 1.7 Importance of variables trained in the model for 2018 out of sample validation'}
 modelo_18<-readRDS("modelo_pred18.rds")
 
+# Cargar los datos
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_18 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+prediccion <- predict(modelo_18, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.2, 1, 0)
+
+
+# Generar la matriz de confusi?n
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisi?n del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusi?n 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
 # Ver la importancia de las variables predictoras
-varImpPlot(modelo_18)
+#varImpPlot(modelo_18)
+#importance(modelo_18)
 ```
 
 
 ### 2014, 2015, 2016, 2017 and 2018 for 2019
 
-```{r}
+```{r, out.width = '95%', fig.cap = 'Figure 1.8 Importance of variables trained in the model for 2019 out of sample validation'}
 modelo_19<-readRDS("modelo_pred19.rds")
 
+# Cargar los datos
+datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17, malnutrition_18)) %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+# datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
+
+set.seed(123)
+indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
+datos_entrenamiento <- datos[indices_entrenamiento, ]
+datos_prueba <- malnutrition_19 %>%
+  dplyr::select(-HHID) %>%
+  na.omit(.)
+
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
+datos_prueba <- datos_prueba[indices_entrenamiento, ]
+
+prediccion <- predict(modelo_19, newdata = datos_prueba, type="response") %>%
+  as.numeric(as.character(.))
+prediccion <- ifelse(prediccion > 0.2, 1, 0)
+
+
+# Generar la matriz de confusi?n
+
+true_values <- data.frame(datos_prueba$malnutrition)
+
+
+confusion_matrix <- table(unlist(true_values), unlist(prediccion))
+
+confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
+                             confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
+                           dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
+
+
+# Calcular la precisi?n del modelo
+precision <- sum(prediccion == datos_prueba$malnutrition) / nrow(datos_prueba)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+
+# Plotear la matriz de confusi?n 
+conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
+  theme_minimal() +
+  geom_text(aes(label = value))
+print(conf_mat_plot)
+
 # Ver la importancia de las variables predictoras
-varImpPlot(modelo_19)
+#varImpPlot(modelo_19)
+#importance(modelo_19)
 ```
 
 
 ###Logistic Regression modelling
 
-```{r}
+```{r log_regression, eval = FALSE}
 data <- malnutrition_14 %>%
   select(-HHID) %>%
   na.omit(.)
@@ -315,8 +586,9 @@ conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, f
 print(conf_mat_plot)
 
 ```
+
 ###BEST MODEL
-```{r}
+```{r, eval = FALSE}
 
 data_best <- malnutrition_14 %>%
   select(latitudy, malnutrition, area_residence, weight, height, age, order, mean.0_NDVI, mean.10_NDVI, mean.11_NDVI, 
@@ -372,7 +644,7 @@ print(conf_mat_plot)
 
 ##2015
 
-```{r}
+```{r, eval = FALSE}
 
 ## 2015
 
@@ -579,7 +851,7 @@ malnutrition_19 <- malnutrition_final %>%
 
 #Whole years training
 
-```{r}
+```{r, eval = FALSE}
 malnutrition_final <- read_csv("dataset/malnutrition_final.csv") 
 
 ## 2014
@@ -791,7 +1063,7 @@ malnutrition <- malnutrition_final %>%
           TMAX_18, TMAX_19, TMIN_14, TMIN_15, TMIN_16, TMIN_17, TMIN_18, TMIN_19)
 ```
 
-```{r, echo = FALSE}
+```{r, eval = FALSE}
 
 write_csv(malnutrition, path(doc_path,malnutrition_path))  
 
@@ -799,46 +1071,4 @@ malnutrition %>%
   group_by(year) %>%
   count(malnutrition)
 ```
-
-```{r}
-# Load data and split into training and testing datasets
-data <- read.csv("dataset/malnutrition_final.csv") %>%
-  select(-HHID)
-train_indices <- sample(nrow(data), 0.9 * nrow(data))
-train_data <- data[train_indices, ]
-test_data <- data[-train_indices, ]
-
-# Fit logistic regression model to training data
-model <- glm(malnutrition ~ ., data = train_data, family = "binomial")
-
-# Predict malnutrition using test data
-predictions <- predict(model, newdata = test_data, type = "response")
-predicted_classes <- ifelse(predictions > 0.5, 1, 0)
-
-# Evaluate model performance using confusion matrix and other metrics
-confusion_matrix <- table(test_data$malnutrition, predicted_classes)
-accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
-precision <- diag(confusion_matrix) / colSums(confusion_matrix)
-recall <- diag(confusion_matrix) / rowSums(confusion_matrix)
-```
-```{r}
-library(reshape2)
-
-confusion_matrix <- table(test_data$malnutrition, predicted_classes)
-
-confusion_matrix <- matrix(c(confusion_matrix[1,]/sum(confusion_matrix[1,]), 
-                          confusion_matrix[2,]/sum(confusion_matrix[2,])), nrow=2,
-                          dimnames = list(c("Not Malnourished", "Malnourished"), c("Not Malnourished", "Malnourished")))
-  
-
-conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(x = "Predicted Class", y = "Actual Class", fill = "Accuracy") +
-  theme_minimal() +
-  geom_text(aes(label = value))
-print(conf_mat_plot)
-
-```
-
 
