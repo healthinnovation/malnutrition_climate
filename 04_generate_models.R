@@ -37,8 +37,18 @@ malnutrition_19 <- read_csv(path_2019)
 
 # Cargar los datos
 datos <- malnutrition_14 %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+              
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 # datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
 
@@ -46,24 +56,34 @@ set.seed(123)
 indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
 datos_entrenamiento <- datos[indices_entrenamiento, ]
 datos_prueba <- malnutrition_15 %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 # datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
 
 
 # Entrenar el modelo de Random Forest
-modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 70, importance = TRUE, do.trace = 10)
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 100, importance = TRUE, do.trace = 10)
 
 summary(modelo_rf)
 
-indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
 datos_prueba <- datos_prueba[indices_entrenamiento, ]
 
 # Ver los resultados de la predicci?n en los datos de prueba
 prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
   as.numeric(as.character(.))
-prediccion <- ifelse(prediccion > 0.3, 1, 0)
+prediccion <- ifelse(prediccion > 0.2, 1, 0)
 
 
 # Generar la matriz de confusi?n
@@ -94,6 +114,8 @@ print(conf_mat_plot)
 
 # Guardar el modelo 14->15
 
+varImpPlot(modelo_rf)
+
 saveRDS(modelo_rf, "modelo_pred15.rds")
 
 
@@ -103,8 +125,18 @@ saveRDS(modelo_rf, "modelo_pred15.rds")
 # Cargar los datos
 
 datos <- data.frame(rbind(malnutrition_14, malnutrition_15)) %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 # datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
 
@@ -112,8 +144,18 @@ set.seed(123)
 indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
 datos_entrenamiento <- datos[indices_entrenamiento, ]
 datos_prueba <- malnutrition_16 %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 # datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
 
@@ -124,7 +166,7 @@ modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 
 
 prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
   as.numeric(as.character(.))
-prediccion <- ifelse(prediccion > 0.3, 1, 0)
+prediccion <- ifelse(prediccion > 0.1, 1, 0)
 
 # Generar la matriz de confusi?n
 
@@ -164,8 +206,18 @@ saveRDS(modelo_rf, "modelo_pred16.rds")
 
 
 datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16)) %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 #datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
 
@@ -173,19 +225,29 @@ set.seed(123)
 indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
 datos_entrenamiento <- datos[indices_entrenamiento, ]
 datos_prueba <- malnutrition_17 %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 #datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
 
-indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
 datos_prueba <- datos_prueba[indices_entrenamiento, ]
 
 modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 100, importance = TRUE, do.trace = 10)
 
 prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
   as.numeric(as.character(.))
-prediccion <- ifelse(prediccion > 0.3, 1, 0)
+prediccion <- ifelse(prediccion > 0.05, 1, 0)
 
 # Generar la matriz de confusi?n
 
@@ -223,8 +285,18 @@ saveRDS(modelo_rf, "modelo_pred17.rds")
 # Cargar los datos
 
 datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17)) %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 #datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
 
@@ -232,19 +304,29 @@ set.seed(123)
 indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
 datos_entrenamiento <- datos[indices_entrenamiento, ]
 datos_prueba <- malnutrition_18 %>%
-  dplyr::select(-HHID) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 #datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
 
-indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
 datos_prueba <- datos_prueba[indices_entrenamiento, ]
 
 modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 70, importance = TRUE, do.trace = 10)
 
 prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
   as.numeric(as.character(.))
-prediccion <- ifelse(prediccion > 0.3, 1, 0)
+prediccion <- ifelse(prediccion > 0.065, 1, 0)
 
 # Generar la matriz de confusi?n
 
@@ -282,8 +364,18 @@ saveRDS(modelo_rf, "modelo_pred18.rds")
 # Cargar los datos
 
 datos <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17, malnutrition_18)) %>%
-  dplyr::select(-HHID, NDVI, SAVI, PP) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 #datos$malnutrition <- factor(datos$malnutrition, levels = c(0, 1))
 
@@ -291,19 +383,29 @@ set.seed(123)
 indices_entrenamiento <- sample(nrow(datos), round(nrow(datos)), replace = FALSE)
 datos_entrenamiento <- datos[indices_entrenamiento, ]
 datos_prueba <- malnutrition_19 %>%
-  dplyr::select(-HHID, NDVI, SAVI, PP) %>%
-  na.omit(.)
+  dplyr::select(malnutrition, longitudx, latitudy, 
+                
+                NDVI_mean, NDVI_sd, 
+                NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
+                NDVI_seasonal_diff,
+                
+                EVI_mean, EVI_sd, EVI_median, EVI_IQR, EVI_last_months, 
+                EVI_first_months, EVI_seasonal_diff,
+                
+                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+                pr_first_months, pr_seasonal_diff) %>%
+  mutate_at(vars(contains("NDVI"), contains("EVI"), contains("pr")), scale)
 
 #datos_prueba$malnutrition <- factor(datos_prueba$malnutrition, levels = c(0, 1))
 
-indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*0.1), replace = FALSE)
+indices_entrenamiento <- sample(nrow(datos_prueba), round(nrow(datos_prueba)*1), replace = FALSE)
 datos_prueba <- datos_prueba[indices_entrenamiento, ]
 
-modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 70, importance = TRUE, do.trace = 10)
+modelo_rf <- randomForest(malnutrition ~ ., data = datos_entrenamiento, ntree = 50, importance = TRUE, do.trace = 10)
 
 prediccion <- predict(modelo_rf, newdata = datos_prueba, type="response") %>%
   as.numeric(as.character(.))
-prediccion <- ifelse(prediccion > 0.3, 1, 0)
+prediccion <- ifelse(prediccion > 0.12, 1, 0)
 
 # Generar la matriz de confusi?n
 

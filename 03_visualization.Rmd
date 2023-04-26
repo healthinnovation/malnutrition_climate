@@ -304,7 +304,7 @@ conf_mat_plot <- ggplot(data = melt(confusion_matrix), aes(x = Var1, y = Var2, f
 print(conf_mat_plot)
 
 # Ver la importancia de las variables predictoras
-#varImpPlot(modelo_15)
+varImpPlot(modelo_15)
 #importance(modelo_15)
 
 ```
