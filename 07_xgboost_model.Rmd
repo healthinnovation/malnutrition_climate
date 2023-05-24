@@ -1,0 +1,174 @@
+---
+title: "Modelo predictivo de desnutrición aguda a partir de factores medioambientales"
+author: "Luis Revilla"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    toc_depth: 3    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Librerías
+
+Selección de todas las librerías para modelar y entrenar, desde preprocesamiento hasta validación cruzada y optimización de hiperparámetros
+
+```{r libraries, echo = FALSE}
+library(tidymodels)
+library(xgboost)
+library(haven)
+library(magrittr)
+library(fs)
+library(readr)
+library(dplyr)
+library(dials)
+library(corrplot)
+library(ggplot2)
+library(yardstick)
+```
+
+## Carga de datasets
+
+Tenemos 5 datasets (1 por año)
+
+```{r datasets, echo=FALSE}
+# Cargar la función
+
+source("load_data.R")
+dataset <- load_data()
+
+malnutrition_14 <- dataset$malnutrition_14
+malnutrition_15 <- dataset$malnutrition_15
+malnutrition_14 <- dataset$malnutrition_14
+malnutrition_16 <- dataset$malnutrition_16
+malnutrition_17 <- dataset$malnutrition_17
+malnutrition_18 <- dataset$malnutrition_18
+malnutrition_19 <- dataset$malnutrition_19
+```
+
+## Pre procesamiento
+
+Seleccionamos el training y test set. En el caso del entrenamiento tomamos los años 2014 a X. Test sería el año siguiente a X.
+
+```{r}
+
+# Training set
+
+training_set <- data.frame(rbind(malnutrition_14, malnutrition_15, 
+                                 malnutrition_16, malnutrition_17, 
+                                 malnutrition_18)) %>% 
+  dplyr::select(
+    malnutrition, NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, 
+    NDVI_last_months, NDVI_first_months, NDVI_seasonal_diff, 
+    pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+    pr_first_months, pr_seasonal_diff, TGAP) %>%
+  mutate(malnutrition = factor(malnutrition))
+
+
+# Test set
+
+test_set <- malnutrition_19 %>%
+  dplyr::select(
+    malnutrition, NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, 
+    NDVI_last_months, NDVI_first_months, NDVI_seasonal_diff, 
+    pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
+    pr_first_months, pr_seasonal_diff, TGAP) %>%
+  mutate(malnutrition = factor(malnutrition))
+
+```
+ 
+## Entrenamiento XGBoost
+
+Escalamiento y centralización de los datosde entrenamiento.
+Se utiliza un recipe para que sea utilizado también en el test set.
+
+```{r}
+
+# Ponemos una semilla para que los resultados sean reproducibles
+
+set.seed(1501)
+
+# Train test split
+
+data_train <- training_set
+data_test  <- test_set
+
+# Crear un objeto recipe para preprocesamiento
+rec <- recipe(malnutrition ~ ., data = data_train) %>%
+  step_center(all_numeric()) %>%
+  step_scale(all_numeric())
+
+# Preprocesamiento
+rec_preprocessed <- prep(rec)
+
+# Aplicar receta de preprocesamiento a los datos
+malnutrition_preprocessed <-
+  recipes::bake(
+    rec_preprocessed, 
+    new_data = data_train
+  ) %>%  
+  rsample::vfold_cv(v = 3)
+
+# Definir la fórmula del modelo
+formula <- "malnutrition ~ ."
+
+xgb_spec <- boost_tree(
+  trees = 1000,
+  tree_depth = 10,
+  min_n = 32,
+  loss_reduction = 1.615487e-03,
+  learn_rate = 6.75973e-02) %>%
+  set_engine("xgboost", nthreads = parallel::detectCores()) %>%
+  set_mode("classification") %>%
+  set_args(scoring = "log_loss", verbose = 1, early_stopping_rounds = 10) %>%
+  set_mode("classification")
+
+train_processed <- bake(rec_preprocessed,  new_data = data_train)
+
+# Entrenar el modelo
+xgb_model_sens <- workflow() %>%
+  add_model(xgb_spec) %>%
+  add_formula(malnutrition ~ .) %>%
+  fit(data = train_processed)
+
+
+test_processed  <- bake(rec_preprocessed, new_data = data_test)
+
+# Evaluar el modelo
+test_prediction <- predict(xgb_model_sens, new_data = test_processed, type = "prob") %>%
+  mutate(.pred_class = if_else(.pred_1 > 0.15, "1", "0")) %>%
+  bind_cols(data_test)
+
+```
+
+## Evaluación del modelo XGBoost
+
+Habiendo entrenado el modelo a partir de los parámetros encontrados por validación
+cruzada, nos centramos en el accuracy y el recall.
+
+```{r}
+
+test_prediction %>% 
+  mutate(.pred_class = as.factor(.pred_class)) %>%
+  yardstick::conf_mat(malnutrition, .pred_class)
+
+# Calcular el accuracy
+accuracy <- mean(test_prediction$.pred_class == test_prediction$malnutrition)
+
+# Calcular el recall
+true_positive <- sum(test_prediction$.pred_class == "1" & test_prediction$malnutrition == "1")
+false_negative <- sum(test_prediction$.pred_class == "0" & test_prediction$malnutrition == "1")
+recall <- true_positive / (true_positive + false_negative)
+
+# Mostrar los resultados
+cat("\nAccuracy: ", accuracy, "\n")
+cat("Recall: ", recall, "\n")
+
+```
+
