@@ -24,93 +24,12 @@ malnutrition_18 <- dataset$malnutrition_18
 malnutrition_19 <- dataset$malnutrition_19
 
 
-# Función para ajustar el modelo y realizar la evaluación
-train_and_evaluate <- function(training_set, test_set, verbose = TRUE) {
-  
-  training_set <- training_set %>%
-    dplyr::select(
-      malnutrition, longitudx, latitudy, NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
-      NDVI_seasonal_diff, pr_mean, pr_sd, pr_median, pr_IQR, 
-      pr_last_months, pr_first_months, pr_seasonal_diff, TGAP) %>%
-    mutate(malnutrition = factor(malnutrition))
-  
-  test_set <- test_set %>%
-    dplyr::select(
-      malnutrition, longitudx, latitudy, NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
-      NDVI_seasonal_diff, pr_mean, pr_sd, pr_median, pr_IQR, 
-      pr_last_months, pr_first_months, pr_seasonal_diff, TGAP) %>%
-    mutate(malnutrition = factor(malnutrition))
-  
-  # Escalar las variables numéricas en el conjunto de entrenamiento y prueba
-  numeric_vars <- c("NDVI_mean", "NDVI_sd", "NDVI_median", "NDVI_IQR", "NDVI_last_months", "NDVI_first_months", 
-                    "NDVI_seasonal_diff", "pr_mean", "pr_sd", "pr_median", "pr_IQR", 
-                    "pr_last_months", "pr_first_months", "pr_seasonal_diff", "TGAP")
-  
-  training_set[, numeric_vars] <- scale(training_set[, numeric_vars])
-  test_set[, numeric_vars] <- scale(test_set[, numeric_vars])
-  
-  # Ajustar el modelo utilizando Random Forest
-  rf_model <- randomForest(malnutrition ~ ., data = training_set)
-  
-  # Predecir las probabilidades de pertenencia a la clase positiva para el conjunto de prueba
-  y_pred_probs <- predict(rf_model, newdata = test_set, type = "response")
-  
-  if (verbose) {
-    cat("Predictions made on", nrow(test_set), "samples.\n")
-  }
-  
-  # Convertir los factores a valores numéricos
-  y_pred_probs <- as.numeric(levels(y_pred_probs))[y_pred_probs]
-  
-  # Aplicar un umbral de clasificación para obtener las etiquetas de clase
-  y_pred <- ifelse(y_pred_probs > 0.001, 1, 0)
-  
-  # Calcular la precisión del modelo
-  accuracy <- sum(y_pred == test_set$malnutrition) / nrow(test_set)
-  
-  # Calcular la matriz de confusión
-  confusion_matrix <- table(factor(y_pred, levels = c(0, 1)), factor(test_set$malnutrition, levels = c(0, 1)))
-  
-  # Retornar la precisión y la matriz de confusión
-  return(list(accuracy = accuracy, confusion_matrix = confusion_matrix))
-}
-
-# Crear una lista para almacenar los resultados
-results <- list()
-
-# Entrenar y evaluar para cada conjunto de datos
-datasets <- list(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17, malnutrition_18, malnutrition_19)
-for (i in 1:(length(datasets) - 1)) {
-  training_set <- bind_rows(datasets[1:i])  # Combinar los conjuntos de datos anteriores
-  if (i < length(datasets)) {
-    test_set <- datasets[[i+1]]
-    
-    # Mensaje de avance
-    cat("Training and evaluating for", i+1, "vs", i, "...\n")
-    
-    # Llamar a la función train_and_evaluate
-    result <- train_and_evaluate(training_set, test_set)
-    
-    # Almacenar los resultados
-    results[[i]] <- result
-  }
-}
-
-
-# Imprimir los resultados
-for (i in seq_along(results)) {
-  cat("Result for", i+1, "vs", i, ":", "\n")
-  cat("Accuracy:", results[[i]]$accuracy, "\n")
-  cat("Confusion Matrix:\n")
-  print(results[[i]]$confusion_matrix)
-  cat("\n")
-}
-
-
 ################# CROSS VALIDATION ###########################################
 
 
-training_set <- data.frame(rbind(malnutrition_14, malnutrition_15, malnutrition_16, malnutrition_17, malnutrition_18)) %>%
+training_set <- data.frame(rbind(malnutrition_14, malnutrition_15, 
+                                 malnutrition_16, malnutrition_17, 
+                                 malnutrition_18)) %>%
   dplyr::select(
     malnutrition, NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
     NDVI_seasonal_diff, pr_mean, pr_sd, pr_median, pr_IQR, 

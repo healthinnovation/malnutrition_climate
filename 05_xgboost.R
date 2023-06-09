@@ -10,30 +10,22 @@ library(corrplot)
 library(ggplot2)
 
 # Cargar los datos
-path_2014 <- path("dataset/malnutrition_final14.csv")
-malnutrition_14 <- read_csv(path_2014) %>%
-  mutate(HHID = as.character(HHID)) 
+source("load_data.R")
+dataset <- load_data()
 
-path_2015 <- path("dataset/malnutrition_final15.csv")
-malnutrition_15 <- read_csv(path_2015)
-
-path_2016 <- path("dataset/malnutrition_final16.csv")
-malnutrition_16 <- read_csv(path_2016)
-
-path_2017 <- path("dataset/malnutrition_final17.csv")
-malnutrition_17 <- read_csv(path_2017)
-
-path_2018 <- path("dataset/malnutrition_final18.csv")
-malnutrition_18 <- read_csv(path_2018)
-
-path_2019 <- path("dataset/malnutrition_final19.csv")
-malnutrition_19 <- read_csv(path_2019)
+malnutrition_14 <- dataset$malnutrition_14
+malnutrition_15 <- dataset$malnutrition_15
+malnutrition_14 <- dataset$malnutrition_14
+malnutrition_16 <- dataset$malnutrition_16
+malnutrition_17 <- dataset$malnutrition_17
+malnutrition_18 <- dataset$malnutrition_18
+malnutrition_19 <- dataset$malnutrition_19
 
 
 
 training_set <- data.frame(rbind(malnutrition_14, malnutrition_15, 
                                  malnutrition_16, malnutrition_17, 
-                                 malnutrition_18)) %>% # En este año el HHID era numérico
+                                 malnutrition_18)) %>% # 
   dplyr::select(
     malnutrition, NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, NDVI_first_months, 
     NDVI_seasonal_diff, pr_mean, pr_sd, pr_median, pr_IQR, 
