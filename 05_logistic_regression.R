@@ -31,10 +31,9 @@ malnutrition_data <- read_and_mutate_malnutrition()
 
 # Vector general de variables descriptivas
 opt_1 <- c(
-  "NDVI_mean", "NDVI_sd", "NDVI_median", "NDVI_IQR", 
-  "NDVI_last_months", "NDVI_first_months", "NDVI_seasonal_diff", 
-  "pr_mean", "pr_sd", "pr_median", "pr_IQR", "pr_last_months", 
-  "pr_first_months", "pr_seasonal_diff", 
+  "NDVI_mean",  
+  "NDVI_seasonal_diff", 
+  "pr_mean", "pr_seasonal_diff", 
   "TMAX", "TMIN"
 )
 
@@ -156,7 +155,7 @@ train_and_evaluate_logistic_regression_models <- function(option) {
 
 
 # Llama a la función para entrenar y evaluar los modelos
-confusion_matrices <- train_and_evaluate_logistic_regression_models(opt_6)
+confusion_matrices <- train_and_evaluate_logistic_regression_models(c(opt_1,opt_2))
 
 for (i in 1:5) {
   cat("Model_", i + 14, ":\n")

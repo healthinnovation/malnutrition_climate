@@ -45,10 +45,9 @@ malnutrition_data <- read_and_mutate_malnutrition()
 
 # Vector general de variables descriptivas
 opt_1 <- c(
-  "NDVI_mean", "NDVI_sd", "NDVI_median", "NDVI_IQR", 
-  "NDVI_last_months", "NDVI_first_months", "NDVI_seasonal_diff", 
-  "pr_mean", "pr_sd", "pr_median", "pr_IQR", "pr_last_months", 
-  "pr_first_months", "pr_seasonal_diff", 
+  "NDVI_mean",  
+  "NDVI_seasonal_diff", 
+  "pr_mean", "pr_seasonal_diff", 
   "TMAX", "TMIN"
 )
 
