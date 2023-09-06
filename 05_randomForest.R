@@ -17,7 +17,6 @@ dataset <- load_data()
 
 malnutrition_14 <- dataset$malnutrition_14
 malnutrition_15 <- dataset$malnutrition_15
-malnutrition_14 <- dataset$malnutrition_14
 malnutrition_16 <- dataset$malnutrition_16
 malnutrition_17 <- dataset$malnutrition_17
 malnutrition_18 <- dataset$malnutrition_18
@@ -127,7 +126,7 @@ create_training_and_test_sets <- function(train_years, test_year, selected_vars)
 
 
 # Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:16, 17, opt_1)
+sets <- create_training_and_test_sets(14:18, 19, opt_6)
 training_set <- sets$training_set %>%
   mutate(TGAP = TMAX - TMIN) %>%
   select(-TMAX, -TMIN)
@@ -195,7 +194,7 @@ rf_tuned <- tune::tune_grid(
   object = rf_wf,
   resamples = malnutrition_preprocessed,
   grid = rf_grid,
-  metrics = yardstick::metric_set(accuracy, f_meas),
+  metrics = yardstick::metric_set(accuracy, sens),
   control = tune::control_grid(verbose = TRUE)
 )
 
@@ -204,7 +203,7 @@ rf_tuned <- tune::tune_grid(
 library(kableExtra)
 
 params_rf_ndvi <- rf_tuned %>%
-  tune::show_best(metric = "f_meas") %>%
+  tune::show_best(metric = "sens") %>%
   dplyr::slice(1:20) %>%
   knitr::kable() %>%
   kable_styling("striped")
@@ -212,12 +211,12 @@ params_rf_ndvi <- rf_tuned %>%
 models_results<- collect_metrics(rf_tuned)
 
 # Guardar la tabla en formato CSV
-write_csv(models_results, "RF_cv_5.csv")
+write_csv(models_results, "RF_19_opt6.csv")
 
-writeLines(capture.output(params_rf_ndvi), "params_rf_ndvi_5.html")
+writeLines(capture.output(params_rf_ndvi), "params_rf_19_opt6.html")
 
 rf_best_params <- rf_tuned %>%
-  tune::select_best("f_meas")
+  tune::select_best("sens")
 
 knitr::kable(rf_best_params)
 
@@ -250,7 +249,7 @@ test_prediction <- rf_model_final %>%
     data = train_processed
   ) %>%
   predict(new_data = test_processed, type = "prob") %>%
-  mutate(.pred_class = if_else(.pred_1 > 0.1, "1", "0")) %>%
+  mutate(.pred_class = if_else(.pred_1 > 0.5, "1", "0")) %>%
   bind_cols(data_test)
 
 # Medir la precisión del modelo utilizando yardstick con el nuevo umbral
@@ -268,4 +267,4 @@ rf_confusion <- test_prediction %>%
   mutate(.pred_class = as.factor(.pred_class)) %>%
   yardstick::conf_mat(malnutrition, .pred_class)
 
-saveRDS(rf_model_final, file = "modelo_rf__NDVI_maxfmeas_5.rds")
+saveRDS(rf_model_final, file = "modelo_rf_19_opt6.rds")
