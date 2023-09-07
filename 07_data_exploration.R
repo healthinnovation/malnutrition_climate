@@ -1,6 +1,6 @@
 library(tidyverse)
 library(ggplot2)
-library(GGally)  # Para plot de correlaci贸n
+library(GGally)  
 library(haven)
 library(magrittr)
 library(fs)
@@ -10,87 +10,230 @@ library(dials)
 library(corrplot)
 
 
-source("load_data.R")
-dataset <- load_data()
+# 1. Function to read all years.................................................
+set.seed(123)
 
-malnutrition_14 <- dataset$malnutrition_14 %>%
-  mutate(year = 2014)
-malnutrition_15 <- dataset$malnutrition_15 %>%
-  mutate(year = 2015)
-malnutrition_16 <- dataset$malnutrition_16 %>%
-  mutate(year = 2016)
-malnutrition_17 <- dataset$malnutrition_17 %>%
-  mutate(year = 2017)
-malnutrition_18 <- dataset$malnutrition_18 %>%
-  mutate(year = 2018)
-malnutrition_19 <- dataset$malnutrition_19 %>%
-  mutate(year = 2019)
+read_and_mutate_malnutrition <- function() {
+  malnutrition_list <- list()
+  for (year in 14:19) {
+    path <- file.path(paste0("dataset/malnutrition_final", year, ".csv"))
+    malnutrition <- read_csv(path) %>%
+      mutate(HHID = as.character(HHID))
+    malnutrition_list[[paste0("malnutrition_", year)]] <- malnutrition
+  }
+  return(malnutrition_list)
+}
 
+# Llama a la funci贸n para cargar los datos de todos los a帽os
+malnutrition_data <- read_and_mutate_malnutrition()
 
-datos <- data.frame(malnutrition_14) %>%
-  dplyr::select(area_residence, region, malnutrition,
-                
-                NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
-                NDVI_first_months, NDVI_seasonal_diff,
-                NDVI_high_count, NDVI_low_count, NDVI_range,
-                
-                pr_mean, pr_sd, pr_median, pr_IQR, pr_last_months, 
-                pr_first_months, pr_seasonal_diff,
-                pr_high_count, pr_low_count, pr_range,
-                
-                tmax_high_count, tmax_low_count, tmax_range,
-                
-                tmin_high_count, tmin_low_count, tmin_range,
-                
-                TMAX, TMIN)
-
-datos <- datos %>%
-  mutate(year = factor(year))
-
-# Resumen de estad铆sticos descriptivos
-summary(datos)
-
-############### CASES BY YEAR ################################
-
-# Obtener el resumen de casos de desnutrici贸n aguda por a帽o
-summary <- datos %>%
-  filter(malnutrition == 1) %>%
-  group_by(year) %>%
-  summarise(total_cases = n())
-
-# Mostrar el resumen
-print(summary)
-
-# Graficar los casos totales por a帽o
-ggplot(summary, aes(x = year, y = total_cases)) +
-  geom_point() +
-  geom_smooth() +
-  labs(x = "A帽o", y = "Casos Totales", title = "Casos de Desnutrici贸n Aguda por A帽o")
+# 1.1. Crear los vectores con variables ........................................
 
 
-################### BOX PLOT ################################
+malnutrition_14 <- malnutrition_data[["malnutrition_14"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2014, 
+         TGAP = TMAX - TMIN) %>%
+  group_by(malnutrition) %>%
+  sample_n(size = 200, replace = TRUE) 
 
-# Gr谩ficos de distribuci贸n y boxplot
-datos %>%
-  gather(key = "variable", value = "valor", -malnutrition, -HHID) %>%
-  ggplot(aes(x = valor, fill = malnutrition)) +
-  geom_bar(position = "dodge", alpha = 0.7, stat = "count") +
-  facet_wrap(~variable, scales = "free") +
-  labs(title = "Distribuci贸n de variables por estado de malnutrici贸n", x = "Valor", y = "Frecuencia")
+malnutrition_15 <- malnutrition_data[["malnutrition_15"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2015,
+         TGAP = TMAX - TMIN) %>%
+  group_by(malnutrition) %>%
+  sample_n(size = 200, replace = TRUE) 
+
+malnutrition_16 <- malnutrition_data[["malnutrition_16"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2016,
+         TGAP = TMAX - TMIN) %>%
+  group_by(malnutrition) %>%
+  sample_n(size = 200, replace = TRUE) 
+
+malnutrition_17 <- malnutrition_data[["malnutrition_17"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2017,
+         TGAP = TMAX - TMIN) %>%
+  group_by(malnutrition) %>%
+  sample_n(size = 200, replace = TRUE) 
+
+malnutrition_18 <- malnutrition_data[["malnutrition_18"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2018,
+         TGAP = TMAX - TMIN) %>%
+  group_by(malnutrition) %>%
+  sample_n(size = 200, replace = TRUE) 
+
+malnutrition_19 <- malnutrition_data[["malnutrition_19"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2019,
+         TGAP = TMAX - TMIN) %>%
+  group_by(malnutrition) %>%
+  sample_n(size = 200, replace = TRUE) 
+
+malnutrition_total <- rbind(malnutrition_14,malnutrition_15,
+                            malnutrition_16,malnutrition_17,
+                            malnutrition_18,malnutrition_19)
+
+#2.  Crear histogramas para las variables num閞icas continuas...................
+
+# Gr醘ico para pr_mean
+ggplot(malnutrition_total, aes(x = pr_mean, fill = malnutrition)) + 
+  geom_histogram(colour = "black",
+                 lwd = 0.75,
+                 linetype = 1,
+                 position = "identity") +
+  facet_wrap(~year) + 
+  labs(title ="Distribuci髇 de pr_mean a trav閟 de los a駉s")
+
+# Gr醘ico para pr_seasonal_diff
+ggplot(malnutrition_total, aes(x = pr_seasonal_diff, fill = malnutrition)) + 
+  geom_histogram(colour = "black",
+                 lwd = 0.75,
+                 linetype = 1,
+                 position = "identity") +
+  facet_wrap(~year) + 
+  labs(title ="Distribuci髇 de pr_seasonal_diff a trav閟 de los a駉s")
 
 
+# Gr醘ico para NDVI_mean
+ggplot(malnutrition_total, aes(x = NDVI_mean, fill = malnutrition)) + 
+  geom_histogram(colour = "black",
+                 lwd = 0.75,
+                 linetype = 1,
+                 position = "identity") +
+  facet_wrap(~year) + 
+  labs(title ="Distribuci髇 de NDVI_mean a trav閟 de los a駉s")
 
-library(ggplot2)
+# Gr醘ico para NDVI_seasonal_diff
+ggplot(malnutrition_total, aes(x = NDVI_seasonal_diff, fill = malnutrition)) + 
+  geom_histogram(colour = "black",
+                 lwd = 0.75,
+                 linetype = 1,
+                 position = "identity") +
+  facet_wrap(~year) + 
+  labs(title ="Distribuci髇 de NDVI_seasonal_diff a trav閟 de los a駉s")
 
-datos %>%
-  gather(key = "variable", value = "valor", -malnutrition) %>%
-  ggplot(aes(x = malnutrition, y = valor, fill = malnutrition)) +
+
+# Gr醘ico para TGAP
+
+ggplot(malnutrition_total, aes(x = TGAP, fill = malnutrition)) + 
+  geom_histogram(colour = "black",
+                 lwd = 0.75,
+                 linetype = 1,
+                 position = "identity") +
+  facet_wrap(~year) + 
+  labs(title ="Distribuci髇 de TGAP a trav閟 de los a駉s")
+
+
+# 3. Crear histograms para las variables num閞icas  ..............................
+
+# Gr醘ico de boxplot para consecutivas_veg_90
+ggplot(malnutrition_total, aes(x = consecutivas_veg_90, fill = malnutrition)) +
+  geom_bar(colour = "black",
+           lwd = 0.25,
+           linetype = 1,
+           position = "jitter") +
+  facet_wrap(~ year) +
+  labs(title = "Conteo de consecutivas_veg_90 por a駉") +
+  xlab("Consecutivas_veg_90") +
+  ylab("Conteo")
+
+# Gr醘ico de boxplot para consecutivas_prec_90
+ggplot(malnutrition_total, aes(x = consecutivas_prec_90, fill = malnutrition)) +
+  geom_bar(colour = "black",
+           lwd = 0.25,
+           linetype = 1,
+           position = "jitter") +
+  facet_wrap(~ year) +
+  labs(title = "Conteo de consecutivas_prec_90 por a駉") +
+  xlab("consecutivas_prec_90") +
+  ylab("Conteo")
+
+# Gr醘ico de boxplot para consecutivas_tmax_90
+ggplot(malnutrition_total, aes(x = consecutivas_tmax_90, fill = malnutrition)) +
+  geom_bar(colour = "black",
+           lwd = 0.25,
+           linetype = 1,
+           position = "jitter") +
+  facet_wrap(~ year) +
+  labs(title = "Conteo de consecutivas_tmax_90 por a駉") +
+  xlab("consecutivas_tmax_90") +
+  ylab("Conteo")
+
+# Gr醘ico de barras (histograma) para consecutivas_tmin_90
+ggplot(malnutrition_total, aes(x = consecutivas_tmin_90, fill = malnutrition)) +
+  geom_histogram(colour = "black", 
+                 size = 0.25, 
+                 linetype = 1,
+                 position = "jitter", 
+                 binwidth = 0.5) +
+  facet_grid(malnutrition ~ year) +
+  labs(title = "Conteo de consecutivas_tmin_90 por a駉") +
+  xlab("consecutivas_tmin_90") +
+  ylab("Conteo") +
+  scale_y_sqrt()
+
+
+# 4. Gr醘ico de boxplots para pr_mean, pr_seasonal_diff, NDVI_mean, NDVI_seasonal_diff y TGAP
+
+
+malnutrition_14 <- malnutrition_data[["malnutrition_14"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2014, 
+         TGAP = TMAX - TMIN) %>%
+  sample_n(size = 2000, replace = TRUE) 
+
+malnutrition_15 <- malnutrition_data[["malnutrition_15"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2015,
+         TGAP = TMAX - TMIN) %>%
+  sample_n(size = 2000, replace = TRUE) 
+
+malnutrition_16 <- malnutrition_data[["malnutrition_16"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2016,
+         TGAP = TMAX - TMIN) %>%
+  sample_n(size = 2000, replace = TRUE) 
+
+malnutrition_17 <- malnutrition_data[["malnutrition_17"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2017,
+         TGAP = TMAX - TMIN) %>%
+  sample_n(size = 2000, replace = TRUE) 
+
+malnutrition_18 <- malnutrition_data[["malnutrition_18"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2018,
+         TGAP = TMAX - TMIN) %>%
+  sample_n(size = 2000, replace = TRUE) 
+
+malnutrition_19 <- malnutrition_data[["malnutrition_19"]] %>%
+  mutate(malnutrition = as.factor(malnutrition), year = 2019,
+         TGAP = TMAX - TMIN) %>%
+  sample_n(size = 2000, replace = TRUE) 
+
+malnutrition_total <- rbind(malnutrition_14,malnutrition_15,
+                            malnutrition_16,malnutrition_17,
+                            malnutrition_18,malnutrition_19)
+
+
+ggplot(malnutrition_total, aes(x = malnutrition, y = pr_mean, fill = malnutrition)) +
   geom_boxplot() +
-  facet_wrap(~variable, scales = "free") +
-  labs(title = "Diagrama de Caja y Bigotes por Variable",
-       x = "Malnutrici贸n",
-       y = "Valor") +
-  theme(legend.position = "none")
+  facet_wrap(~ year) +
+  labs(title = "Distribuci髇 de pr_mean por malnutrition") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "red"))
 
-# Matriz de correlaci贸n
-ggcorr(datos %>% select(-area_residence), label = TRUE)
+ggplot(malnutrition_total, aes(x = malnutrition, y = pr_seasonal_diff, fill = malnutrition)) +
+  geom_boxplot() +
+  facet_wrap(~ year) +
+  labs(title = "Distribuci髇 de pr_seasonal_diff por malnutrition") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "red"))
+
+ggplot(malnutrition_total, aes(x = malnutrition, y = NDVI_mean, fill = malnutrition)) +
+  geom_boxplot() +
+  facet_wrap(~ year) +
+  labs(title = "Distribuci髇 de NDVI_mean por malnutrition") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "red"))
+
+ggplot(malnutrition_total, aes(x = malnutrition, y = NDVI_seasonal_diff, fill = malnutrition)) +
+  geom_boxplot() +
+  facet_wrap(~ year) +
+  labs(title = "Distribuci髇 de NDVI_seasonal_diff por malnutrition") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "red"))
+
+ggplot(malnutrition_total, aes(x = malnutrition, y = TGAP, fill = malnutrition)) +
+  geom_boxplot() +
+  facet_wrap(~ year) +
+  labs(title = "Distribuci髇 de TGAP por malnutrition") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "red"))
