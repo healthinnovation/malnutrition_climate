@@ -126,13 +126,36 @@ create_training_and_test_sets <- function(train_years, test_year, selected_vars)
 
 
 # Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:18, 19, opt_6)
+sets <- create_training_and_test_sets(14:18, 19, c(opt_1,opt_5,opt_6))
 training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
+  mutate(TGAP = TMAX - TMIN, con_veg = consecutivas_veg_90 + consecutivas_veg_10,
+         con_prec = consecutivas_prec_90 + consecutivas_prec_10,
+         con_tmax = consecutivas_tmax_90 + consecutivas_tmax_10,
+         con_tmin = consecutivas_tmin_90 + consecutivas_tmin_10,
+         
+         group_veg = grupos_veg_90 + grupos_veg_10,
+         group_prec = grupos_prec_90 + grupos_prec_10,
+         group_tmax = grupos_tmax_90 + grupos_tmax_10,
+         group_tmin = grupos_tmin_90 + grupos_tmin_10) %>%
+  
+  select(-TMAX, -TMIN, -consecutivas_prec_90, -consecutivas_prec_10, 
+         -consecutivas_tmax_90, -consecutivas_tmax_10, -consecutivas_tmin_90,
+         -consecutivas_tmin_10, -consecutivas_veg_90, -consecutivas_veg_10)
+
 test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
+  mutate(TGAP = TMAX - TMIN, con_veg = consecutivas_veg_90 + consecutivas_veg_10,
+         con_prec = consecutivas_prec_90 + consecutivas_prec_10,
+         con_tmax = consecutivas_tmax_90 + consecutivas_tmax_10,
+         con_tmin = consecutivas_tmin_90 + consecutivas_tmin_10,
+         
+         group_veg = grupos_veg_90 + grupos_veg_10,
+         group_prec = grupos_prec_90 + grupos_prec_10,
+         group_tmax = grupos_tmax_90 + grupos_tmax_10,
+         group_tmin = grupos_tmin_90 + grupos_tmin_10) %>%
+  
+  select(-TMAX, -TMIN, -consecutivas_prec_90, -consecutivas_prec_10, 
+         -consecutivas_tmax_90, -consecutivas_tmax_10, -consecutivas_tmin_90,
+         -consecutivas_tmin_10, -consecutivas_veg_90, -consecutivas_veg_10)
 
 
 #Train test split
@@ -154,7 +177,7 @@ malnutrition_preprocessed <-
     rec_preprocessed, 
     new_data = data_train
   ) %>%  
-  rsample::vfold_cv(v = 3, strata = "malnutrition", breaks = 3)
+  rsample::vfold_cv(v = 5, strata = "malnutrition", breaks = 3)
 
 # Definir la fórmula del modelo
 formula <- "malnutrition ~ ."
@@ -178,7 +201,7 @@ rf_params <-
 rf_grid <- 
   dials::grid_random(
     rf_params, 
-    size =  10
+    size =  20
   )
 
 knitr::kable(head(rf_grid))
@@ -194,7 +217,7 @@ rf_tuned <- tune::tune_grid(
   object = rf_wf,
   resamples = malnutrition_preprocessed,
   grid = rf_grid,
-  metrics = yardstick::metric_set(accuracy, sens),
+  metrics = yardstick::metric_set(accuracy, sens, kap, roc_auc),
   control = tune::control_grid(verbose = TRUE)
 )
 
@@ -211,9 +234,9 @@ params_rf_ndvi <- rf_tuned %>%
 models_results<- collect_metrics(rf_tuned)
 
 # Guardar la tabla en formato CSV
-write_csv(models_results, "RF_19_opt6.csv")
+write_csv(models_results, "RF_19_opt156_final.csv")
 
-writeLines(capture.output(params_rf_ndvi), "params_rf_19_opt6.html")
+writeLines(capture.output(params_rf_ndvi), "params_rf_19_opt156_final.html")
 
 rf_best_params <- rf_tuned %>%
   tune::select_best("sens")
@@ -267,4 +290,4 @@ rf_confusion <- test_prediction %>%
   mutate(.pred_class = as.factor(.pred_class)) %>%
   yardstick::conf_mat(malnutrition, .pred_class)
 
-saveRDS(rf_model_final, file = "modelo_rf_19_opt6.rds")
+saveRDS(rf_model_final, file = "modelo_rf_19_opt12_final.rds")

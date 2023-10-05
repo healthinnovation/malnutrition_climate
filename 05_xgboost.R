@@ -127,30 +127,13 @@ create_training_and_test_sets <- function(train_years, test_year,
 
 
 # Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:16, 17, c(opt_1,opt_2))
+sets <- create_training_and_test_sets(14:18, 19, c(opt_1,opt_2))
 training_set <- sets$training_set %>%
   mutate(TGAP = TMAX - TMIN) %>%
   select(-TMAX, -TMIN)
 test_set <- sets$test_set %>%
   mutate(TGAP = TMAX - TMIN) %>%
   select(-TMAX, -TMIN)
-
-
-#Colinealidad
-
-# Calcular la matriz de correlación entre todas las variables numéricas
-corr_matrix <- cor(training_set[sapply(training_set, is.numeric)], 
-                   use = "pairwise.complete.obs")
-
-# Identificar pares de variables con alta correlación
-high_corr <- which(upper.tri(corr_matrix, 
-                             diag = FALSE) & abs(corr_matrix) > 0.7, 
-                   arr.ind = TRUE)
-
-# Crear un dataframe para almacenar las variables con su correlación
-correlation_df <- data.frame(Variable1 = colnames(corr_matrix)[high_corr[, 1]],
-                             Variable2 = colnames(corr_matrix)[high_corr[, 2]],
-                             Correlation = corr_matrix[high_corr])
 
 
 #Train test split
@@ -172,7 +155,7 @@ malnutrition_preprocessed <-
     rec_preprocessed, 
     new_data = data_train
   ) %>%  
-  rsample::vfold_cv(v = 3, strata = "malnutrition", breaks = 3)
+  rsample::vfold_cv(v = 5, strata = "malnutrition", breaks = 3)
 
 # Definir la fórmula del modelo
 formula <- "malnutrition ~ ."
@@ -185,7 +168,6 @@ xgb_spec <- boost_tree(
   loss_reduction = tune(),
   learn_rate = tune()) %>%
   set_engine("xgboost", nthreads = parallel::detectCores()) %>%
-  set_mode("classification") %>%
   set_args(scoring = "log_loss", verbose = 1, early_stopping_rounds = 10) %>%
   set_mode("classification")
 
@@ -201,7 +183,7 @@ xgb_params <-
 xgb_grid <- 
   dials::grid_random(
     xgb_params, 
-    size = 10
+    size = 20
   )
 knitr::kable(head(xgb_grid))
 
@@ -216,7 +198,7 @@ xgb_tuned <- tune::tune_grid(
   object = xgb_wf,
   resamples = malnutrition_preprocessed,
   grid = xgb_grid,
-  metrics = yardstick::metric_set(accuracy, precision, recall),
+  metrics = yardstick::metric_set(accuracy, sens, kap, roc_auc),
   control = tune::control_grid(verbose = TRUE)
 )
 
@@ -226,14 +208,17 @@ xgb_tuned <- tune::tune_grid(
 library(kableExtra)
 
 params_xg_ndvi <- xgb_tuned %>%
-  tune::show_best(metric = "accuracy") %>%
+  tune::show_best(metric = "sens") %>%
   dplyr::slice(1:20) %>%
   knitr::kable() %>%
   kable_styling("striped")
 
 models_results<- collect_metrics(xgb_tuned)
 
-writeLines(capture.output(params_xg_ndvi), "params_xg_ndvi.html")
+# Guardar la tabla en formato CSV
+write_csv(models_results, "XGB_19_opt12_final.csv")
+
+writeLines(capture.output(params_xg_ndvi), "XGB_19_opt12.html")
 
 xgb_best_params <- xgb_tuned %>%
   tune::select_best("accuracy")
