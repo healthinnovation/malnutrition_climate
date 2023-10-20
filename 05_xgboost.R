@@ -127,13 +127,37 @@ create_training_and_test_sets <- function(train_years, test_year,
 
 
 # Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:18, 19, c(opt_1,opt_2))
+sets <- create_training_and_test_sets(14:18, 19, c(opt_1,opt_5,opt_6))
 training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
+  mutate(TGAP = TMAX - TMIN, con_veg = consecutivas_veg_90 + consecutivas_veg_10,
+         con_prec = consecutivas_prec_90 + consecutivas_prec_10,
+         con_tmax = consecutivas_tmax_90 + consecutivas_tmax_10,
+         con_tmin = consecutivas_tmin_90 + consecutivas_tmin_10,
+         
+         group_veg = grupos_veg_90 + grupos_veg_10,
+         group_prec = grupos_prec_90 + grupos_prec_10,
+         group_tmax = grupos_tmax_90 + grupos_tmax_10,
+         group_tmin = grupos_tmin_90 + grupos_tmin_10) %>%
+  
+  select(-TMAX, -TMIN, -consecutivas_prec_90, -consecutivas_prec_10, 
+         -consecutivas_tmax_90, -consecutivas_tmax_10, -consecutivas_tmin_90,
+         -consecutivas_tmin_10, -consecutivas_veg_90, -consecutivas_veg_10)
+
 test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
+  mutate(TGAP = TMAX - TMIN, con_veg = consecutivas_veg_90 + consecutivas_veg_10,
+         con_prec = consecutivas_prec_90 + consecutivas_prec_10,
+         con_tmax = consecutivas_tmax_90 + consecutivas_tmax_10,
+         con_tmin = consecutivas_tmin_90 + consecutivas_tmin_10,
+         
+         group_veg = grupos_veg_90 + grupos_veg_10,
+         group_prec = grupos_prec_90 + grupos_prec_10,
+         group_tmax = grupos_tmax_90 + grupos_tmax_10,
+         group_tmin = grupos_tmin_90 + grupos_tmin_10) %>%
+  
+  select(-TMAX, -TMIN, -consecutivas_prec_90, -consecutivas_prec_10, 
+         -consecutivas_tmax_90, -consecutivas_tmax_10, -consecutivas_tmin_90,
+         -consecutivas_tmin_10, -consecutivas_veg_90, -consecutivas_veg_10)
+
 
 
 #Train test split
@@ -202,7 +226,8 @@ xgb_tuned <- tune::tune_grid(
   control = tune::control_grid(verbose = TRUE)
 )
 
-
+###############################################################################
+###############################################################################
 #Mejores parámetros para ver accuracy recall y precision
 
 library(kableExtra)
@@ -216,9 +241,9 @@ params_xg_ndvi <- xgb_tuned %>%
 models_results<- collect_metrics(xgb_tuned)
 
 # Guardar la tabla en formato CSV
-write_csv(models_results, "XGB_19_opt12_final.csv")
+write_csv(models_results, "XGB_19_opt156_final.csv")
 
-writeLines(capture.output(params_xg_ndvi), "XGB_19_opt12.html")
+writeLines(capture.output(params_xg_ndvi), "XGB_16_opt156.html")
 
 xgb_best_params <- xgb_tuned %>%
   tune::select_best("accuracy")

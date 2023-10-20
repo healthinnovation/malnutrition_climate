@@ -491,9 +491,9 @@ rf_model_final <- rf_spec %>%
 ### 2014-2015 para 2016 para la opción 1
 
 ```{r 2016}
-RF_2019_56 <- read_csv("models/RF/Version September/2019/RF_19_opt156_final.csv") %>%
+XGB_2016_12 <- read_csv("models/XGB/XGB_16_opt12_final.csv") %>%
   mutate(.config = gsub("Preprocessor1_", "", .config))
-head(RF_2019_56, n = 60)
+head(XGB_2016_12, n = 60)
 ```
 
 
