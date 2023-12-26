@@ -6,12 +6,14 @@ library(dplyr)
 library(zoo)
 library(ROSE)
 
-malnutrition_final <- read_csv("dataset/malnutrition_final.csv")
+malnutrition_final <- read_csv("dataset/malnutrition_final.csv") %>%
+  distinct(HHID.x, order, .keep_all = TRUE)
 
 #malnutrition_balanced <- ovun.sample(malnutrition ~ ., 
 #                                     data = malnutrition_final, method = "over", 
 #                                     p = 0.2)
 #malnutrition_balanced <- malnutrition_balanced[["data"]]
+
 
 ## 2014
 
@@ -286,7 +288,9 @@ malnutrition_14_thresholded <- malnutrition_14_with_thresholds %>%
   
   #Seleccionamos las variables que uniremos posteriormente a los umbrales
   #contando los meses consecutivos y grupos de meses consecutivos
-  transmute(HHID, area_residence, region, conglomerado, malnutrition,
+  transmute(HHID, area_residence, region, conglomerado, longitudx, latitudy,
+            
+            malnutrition,
             
             NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
             NDVI_first_months, NDVI_seasonal_diff, NDVI_high_90, NDVI_high_95, 
@@ -500,9 +504,6 @@ malnutrition_14_new <- malnutrition_14_new %>%
 malnutrition_14_final <- malnutrition_14_new[, 289:length(names(malnutrition_14_new))]
 
 malnutrition_14 <- cbind(malnutrition_14_thresholded, malnutrition_14_final)
-
-malnutrition_14 <- ovun.sample(malnutrition ~ ., data = malnutrition_14, method = "over", p = 0.2)
-malnutrition_14 <- as.data.frame(malnutrition_14$data)
 
 malnutrition_path <- paste("malnutrition_final14.csv", sep = "")
 
@@ -846,7 +847,9 @@ malnutrition_15_thresholded <- malnutrition_15_full_with_thresholds %>%
     TMIN = rowMeans(.[,which(names(malnutrition_15_full)=="mean.201501_tmmn"):
                         which(names(malnutrition_15_full)=="mean.201512_tmmn")]))%>%
   
-  transmute(HHID, area_residence, region, conglomerado, malnutrition, conglomerado,
+  transmute(HHID, area_residence, region, conglomerado, longitudx, latitudy,
+            
+            malnutrition,
             
             NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
             NDVI_first_months, NDVI_seasonal_diff,
@@ -1085,10 +1088,6 @@ malnutrition_15_final <- malnutrition_15_new[, 289:length(
   names(malnutrition_15_new))]
 
 malnutrition_15 <- cbind(malnutrition_15_thresholded, malnutrition_15_final)
-
-malnutrition_15 <- ovun.sample(malnutrition ~ ., data = malnutrition_15, 
-                               method = "over", p = 0.2)
-malnutrition_15 <- as.data.frame(malnutrition_15$data)
 
 malnutrition_path <- paste("malnutrition_final15.csv", sep = "")
 
@@ -1475,7 +1474,9 @@ malnutrition_16_thresholded <- malnutrition_16_full_with_thresholds %>%
     TMIN = rowMeans(.[,which(names(malnutrition_16_full)=="mean.201601_tmmn"):
                         which(names(malnutrition_16_full)=="mean.201612_tmmn")]))%>%
   
-  transmute(HHID, area_residence, region, conglomerado, malnutrition, conglomerado,
+  transmute(HHID, area_residence, region, conglomerado, longitudx, latitudy,
+            
+            malnutrition,
             
             NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
             NDVI_first_months, NDVI_seasonal_diff,
@@ -2120,7 +2121,9 @@ malnutrition_17_thresholded <- malnutrition_17_full_with_thresholds %>%
     TMIN = rowMeans(.[,which(names(malnutrition_17_full)=="mean.201701_tmmn"):
                         which(names(malnutrition_17_full)=="mean.201712_tmmn")]))%>%
   
-  transmute(HHID, area_residence, region, conglomerado, malnutrition, conglomerado,
+  transmute(HHID, area_residence, region, conglomerado, longitudx, latitudy,
+            
+            malnutrition,
             
             NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
             NDVI_first_months, NDVI_seasonal_diff,
@@ -2792,7 +2795,9 @@ malnutrition_18_thresholded <- malnutrition_18_full_with_thresholds %>%
     TMIN = rowMeans(.[,which(names(malnutrition_18_full)=="mean.201801_tmmn"):
                         which(names(malnutrition_18_full)=="mean.201812_tmmn")]))%>%
   
-  transmute(HHID, area_residence, region, conglomerado, malnutrition, conglomerado,
+  transmute(HHID, area_residence, region, conglomerado, longitudx, latitudy,
+            
+            malnutrition,
             
             NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
             NDVI_first_months, NDVI_seasonal_diff,
@@ -3457,7 +3462,9 @@ malnutrition_19_thresholded <- malnutrition_19_full_with_thresholds %>%
     TMIN = rowMeans(.[,which(names(malnutrition_19_full)=="mean.201901_tmmn"):
                         which(names(malnutrition_19_full)=="mean.201912_tmmn")]))%>%
   
-  transmute(HHID, area_residence, region, conglomerado, malnutrition, conglomerado,
+  transmute(HHID, area_residence, region, conglomerado, longitudx, latitudy,
+            
+            malnutrition,
             
             NDVI_mean, NDVI_sd, NDVI_median, NDVI_IQR, NDVI_last_months, 
             NDVI_first_months, NDVI_seasonal_diff,

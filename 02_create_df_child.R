@@ -107,6 +107,20 @@ child <- mutate(child, malnutrition = HC12/100) %>%
 house <- read_sav(variable_house_path) %>%
     select(HHID, longitudx, latitudy, HV025, HV024, HV001)
 
+#### 2015 ####
+
+house <- read_sav(variable_house_path) %>%
+  select(HHID, LONGITUDX, LATITUDY, HV025, HV024, HV001) %>%
+  mutate(longitudx = LONGITUDX, latitudy = LATITUDY) %>%
+  select(-c(LONGITUDX, LATITUDY))
+
+#### 2017 ####
+
+house <- read_sav(variable_house_path) %>%
+  select(HHID, long_ccpp, lat_ccpp, HV025, HV024, HV001) %>%
+  mutate(longitudx = long_ccpp, latitudy = lat_ccpp) %>%
+  select(-c(long_ccpp, lat_ccpp))
+
 # 1.6 Creation of the dataset (child and household variables) ----------------
 df <- 
   child %>% 
