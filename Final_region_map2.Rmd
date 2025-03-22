@@ -1200,6 +1200,58 @@ print(accuracy_by_region)
 print(sensitivity_by_region)
 ```
 
+
+```{r}
+# Suponiendo que rf_region_2016 tiene una columna 'region'
+lista_regiones <- unique(rf_region_2018$region)
+
+# Función para procesar cada subconjunto
+procesar_region <- function(name_region) {
+  
+    datos <- rf_region_2018 %>%
+      filter(region == name_region)
+  
+    d1 <- datos %>%
+      select(malnutrition, longitudx, latitudy)
+    d2 <- datos %>%
+      select(pred_class, longitudx, latitudy)
+
+    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
+    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
+
+    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
+
+    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
+    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
+
+    m1 <- mapview(ground_truth, cex = size_area1)
+    m2 <- mapview(prediction,cex = size_area2)
+
+    m <- leafsync::sync(m1, m2)
+    return(m)
+}
+
+# Aplicar la función a cada subconjunto
+mapas_por_region <- lapply(lista_regiones, procesar_region)
+```
+
+```{r}
+mapas_por_region
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #### Regions
 
 ```{r}
@@ -1492,6 +1544,53 @@ print(accuracy_by_region)
 
 print(sensitivity_by_region)
 ```
+
+
+
+
+```{r}
+# Suponiendo que rf_region_2016 tiene una columna 'region'
+lista_regiones <- unique(rf_region_2019$region)
+
+# Función para procesar cada subconjunto
+procesar_region <- function(name_region) {
+  
+    datos <- rf_region_2019 %>%
+      filter(region == name_region)
+  
+    d1 <- datos %>%
+      select(malnutrition, longitudx, latitudy)
+    d2 <- datos %>%
+      select(pred_class, longitudx, latitudy)
+
+    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
+    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
+
+    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
+
+    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
+    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
+
+    m1 <- mapview(ground_truth, cex = size_area1)
+    m2 <- mapview(prediction,cex = size_area2)
+
+    m <- leafsync::sync(m1, m2)
+    return(m)
+}
+
+# Aplicar la función a cada subconjunto
+mapas_por_region <- lapply(lista_regiones, procesar_region)
+```
+
+```{r}
+mapas_por_region
+```
+
+
+
+
+
+
 
 #### Regions
 

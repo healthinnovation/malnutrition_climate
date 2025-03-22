@@ -26,7 +26,7 @@ library(magrittr)
 library(fs)
 library(readr)
 library(dplyr)
-library(dials)
+library(dials) 
 library(corrplot)
 library(ggplot2)
 library(yardstick)
@@ -56,13 +56,14 @@ read_and_mutate_malnutrition <- function() {
 # Llama a la funciÃ³n para cargar los datos de todos los aÃ±os
 malnutrition_data <- read_and_mutate_malnutrition()
 
+
 malnutrition_14 <- malnutrition_data[["malnutrition_14"]] %>%
-  mutate(malnutrition = as.factor(malnutrition), year = 2014, 
+  mutate(malnutrition = as.factor(malnutrition), year = 2014,
          TGAP = TMAX - TMIN) 
 
 malnutrition_15 <- malnutrition_data[["malnutrition_15"]] %>%
   mutate(malnutrition = as.factor(malnutrition), year = 2015,
-         TGAP = TMAX - TMIN)
+         TGAP = TMAX - TMIN) 
 
 malnutrition_16 <- malnutrition_data[["malnutrition_16"]] %>%
   mutate(malnutrition = as.factor(malnutrition), year = 2016,
@@ -80,11 +81,277 @@ malnutrition_19 <- malnutrition_data[["malnutrition_19"]] %>%
   mutate(malnutrition = as.factor(malnutrition), year = 2019,
          TGAP = TMAX - TMIN) 
 
-malnutrition_total <- rbind(malnutrition_14,malnutrition_15,
-                            malnutrition_16,malnutrition_17,
-                            malnutrition_18,malnutrition_19)
 
 ```
+
+
+```{r socio, results=FALSE}
+# 1. Function to read all years.................................................
+set.seed(123)
+
+read_and_mutate_malnutrition <- function() {
+  malnutrition_list <- list()
+  for (year in 14:19) {
+    path <- file.path(paste0("dataset/malnutrition_socio", year, ".csv"))
+    malnutrition <- read_csv(path) %>%
+      mutate(HHID = as.character(HHID))
+    malnutrition_list[[paste0("malnutrition_", year)]] <- malnutrition
+  }
+  return(malnutrition_list)
+}
+
+# Llama a la funciÃ³n para cargar los datos de todos los aÃ±os
+malnutrition_data <- read_and_mutate_malnutrition()
+
+socio_14 <- malnutrition_data[["malnutrition_14"]] %>%
+  select(-area_residence, -region, -conglomerado, -malnutrition,-longitudx,-latitudy) %>%
+  rename(residence_place = HV026) %>%
+  mutate(residence_place = recode(residence_place,
+                                  `0` = "Capital, gran ciudad",
+                                  `1` = "Pequeña ciudad",
+                                  `2` = "Pueblo",
+                                  `3` = "Campo"),
+         
+         mom_edu = recode(mom_edu,
+                          `0` = "Sin educación",
+                          `1` = "Primaria",
+                          `2` = "Secundaria",
+                          `3` = "Superior",
+                          `8` = "No sabe"),
+         
+         water_source = recode(water_source,
+                               `11` = "Dentro de la vivienda",
+                               `12` = "Fuera de la vivienda, pero dentro del edificio",
+                               `13` = "Pilón/Grifo público",
+                               `21` = "Pozo en la vivienda/patio/lote",
+                               `22` = "Pozo público",
+                               `41` = "Manantial (puquio)",
+                               `43` = "Río/acequia/laguna",
+                               `51` = "Agua de lluvia",
+                               `61` = "Camión cisterna",
+                               `71` = "Agua embotellada",
+                               `96` = "Otro"),
+         
+         water_available = recode(water_available,
+                                  `0` = "No",
+                                  `1` = "Si"),
+         
+         wealth_index = recode(wealth_index,
+                               `1` = "Los más pobres",
+                               `2` = "Pobre",
+                               `3` = "Medio",
+                               `4` = "Rico",
+                               `5` = "Más rico"))
+
+
+socio_15 <- malnutrition_data[["malnutrition_15"]] %>%
+  select(-area_residence, -region, -conglomerado, -malnutrition,-longitudx,-latitudy) %>%
+  rename(residence_place = HV026) %>%
+  mutate(residence_place = recode(residence_place,
+                                  `0` = "Capital, gran ciudad",
+                                  `1` = "Pequeña ciudad",
+                                  `2` = "Pueblo",
+                                  `3` = "Campo"),
+         
+         mom_edu = recode(mom_edu,
+                          `0` = "Sin educación",
+                          `1` = "Primaria",
+                          `2` = "Secundaria",
+                          `3` = "Superior",
+                          `8` = "No sabe"),
+         
+         water_source = recode(water_source,
+                               `11` = "Dentro de la vivienda",
+                               `12` = "Fuera de la vivienda, pero dentro del edificio",
+                               `13` = "Pilón/Grifo público",
+                               `21` = "Pozo en la vivienda/patio/lote",
+                               `22` = "Pozo público",
+                               `41` = "Manantial (puquio)",
+                               `43` = "Río/acequia/laguna",
+                               `51` = "Agua de lluvia",
+                               `61` = "Camión cisterna",
+                               `71` = "Agua embotellada",
+                               `96` = "Otro"),
+         
+         water_available = recode(water_available,
+                                  `0` = "No",
+                                  `1` = "Si"),
+         
+         wealth_index = recode(wealth_index,
+                               `1` = "Los más pobres",
+                               `2` = "Pobre",
+                               `3` = "Medio",
+                               `4` = "Rico",
+                               `5` = "Más rico"))
+
+
+socio_16 <- malnutrition_data[["malnutrition_16"]] %>%
+  select(-area_residence, -region, -conglomerado, -malnutrition,-longitudx,-latitudy) %>%
+  rename(residence_place = HV026) %>%
+  mutate(residence_place = recode(residence_place,
+                                  `0` = "Capital, gran ciudad",
+                                  `1` = "Pequeña ciudad",
+                                  `2` = "Pueblo",
+                                  `3` = "Campo"),
+         
+         mom_edu = recode(mom_edu,
+                          `0` = "Sin educación",
+                          `1` = "Primaria",
+                          `2` = "Secundaria",
+                          `3` = "Superior",
+                          `8` = "No sabe"),
+         
+         water_source = recode(water_source,
+                               `11` = "Dentro de la vivienda",
+                               `12` = "Fuera de la vivienda, pero dentro del edificio",
+                               `13` = "Pilón/Grifo público",
+                               `21` = "Pozo en la vivienda/patio/lote",
+                               `22` = "Pozo público",
+                               `41` = "Manantial (puquio)",
+                               `43` = "Río/acequia/laguna",
+                               `51` = "Agua de lluvia",
+                               `61` = "Camión cisterna",
+                               `71` = "Agua embotellada",
+                               `96` = "Otro"),
+         
+         water_available = recode(water_available,
+                                  `0` = "No",
+                                  `1` = "Si"),
+         
+         wealth_index = recode(wealth_index,
+                               `1` = "Los más pobres",
+                               `2` = "Pobre",
+                               `3` = "Medio",
+                               `4` = "Rico",
+                               `5` = "Más rico"))
+
+
+socio_17 <- malnutrition_data[["malnutrition_17"]] %>%
+  select(-area_residence, -region, -conglomerado, -malnutrition,-longitudx,-latitudy) %>%
+  rename(residence_place = HV026) %>%
+  mutate(residence_place = recode(residence_place,
+                                  `0` = "Capital, gran ciudad",
+                                  `1` = "Pequeña ciudad",
+                                  `2` = "Pueblo",
+                                  `3` = "Campo"),
+         
+         mom_edu = recode(mom_edu,
+                          `0` = "Sin educación",
+                          `1` = "Primaria",
+                          `2` = "Secundaria",
+                          `3` = "Superior",
+                          `8` = "No sabe"),
+         
+         water_source = recode(water_source,
+                               `11` = "Dentro de la vivienda",
+                               `12` = "Fuera de la vivienda, pero dentro del edificio",
+                               `13` = "Pilón/Grifo público",
+                               `21` = "Pozo en la vivienda/patio/lote",
+                               `22` = "Pozo público",
+                               `41` = "Manantial (puquio)",
+                               `43` = "Río/acequia/laguna",
+                               `51` = "Agua de lluvia",
+                               `61` = "Camión cisterna",
+                               `71` = "Agua embotellada",
+                               `96` = "Otro"),
+         
+         water_available = recode(water_available,
+                                  `0` = "No",
+                                  `1` = "Si"),
+         
+         wealth_index = recode(wealth_index,
+                               `1` = "Los más pobres",
+                               `2` = "Pobre",
+                               `3` = "Medio",
+                               `4` = "Rico",
+                               `5` = "Más rico"))
+
+
+socio_18 <- malnutrition_data[["malnutrition_18"]] %>%
+  select(-area_residence, -region, -conglomerado, -malnutrition,-longitudx,-latitudy) %>%
+  rename(residence_place = HV026) %>%
+  mutate(residence_place = recode(residence_place,
+                                  `0` = "Capital, gran ciudad",
+                                  `1` = "Pequeña ciudad",
+                                  `2` = "Pueblo",
+                                  `3` = "Campo"),
+         
+         mom_edu = recode(mom_edu,
+                          `0` = "Sin educación",
+                          `1` = "Primaria",
+                          `2` = "Secundaria",
+                          `3` = "Superior",
+                          `8` = "No sabe"),
+         
+         water_source = recode(water_source,
+                               `11` = "Dentro de la vivienda",
+                               `12` = "Fuera de la vivienda, pero dentro del edificio",
+                               `13` = "Pilón/Grifo público",
+                               `21` = "Pozo en la vivienda/patio/lote",
+                               `22` = "Pozo público",
+                               `41` = "Manantial (puquio)",
+                               `43` = "Río/acequia/laguna",
+                               `51` = "Agua de lluvia",
+                               `61` = "Camión cisterna",
+                               `71` = "Agua embotellada",
+                               `96` = "Otro"),
+         
+         water_available = recode(water_available,
+                                  `0` = "No",
+                                  `1` = "Si"),
+         
+         wealth_index = recode(wealth_index,
+                               `1` = "Los más pobres",
+                               `2` = "Pobre",
+                               `3` = "Medio",
+                               `4` = "Rico",
+                               `5` = "Más rico"))
+
+
+socio_19 <- malnutrition_data[["malnutrition_19"]] %>%
+  select(-area_residence, -region, -conglomerado, -malnutrition,-longitudx,-latitudy) %>%
+  rename(residence_place = HV026) %>%
+  mutate(residence_place = recode(residence_place,
+                                  `0` = "Capital, gran ciudad",
+                                  `1` = "Pequeña ciudad",
+                                  `2` = "Pueblo",
+                                  `3` = "Campo"),
+         
+         mom_edu = recode(mom_edu,
+                          `0` = "Sin educación",
+                          `1` = "Primaria",
+                          `2` = "Secundaria",
+                          `3` = "Superior",
+                          `8` = "No sabe"),
+         
+         water_source = recode(water_source,
+                               `11` = "Dentro de la vivienda",
+                               `12` = "Fuera de la vivienda, pero dentro del edificio",
+                               `13` = "Pilón/Grifo público",
+                               `21` = "Pozo en la vivienda/patio/lote",
+                               `22` = "Pozo público",
+                               `41` = "Manantial (puquio)",
+                               `43` = "Río/acequia/laguna",
+                               `51` = "Agua de lluvia",
+                               `61` = "Camión cisterna",
+                               `71` = "Agua embotellada",
+                               `96` = "Otro"),
+         
+         water_available = recode(water_available,
+                                  `0` = "No",
+                                  `1` = "Si"),
+         
+         wealth_index = recode(wealth_index,
+                               `1` = "Los más pobres",
+                               `2` = "Pobre",
+                               `3` = "Medio",
+                               `4` = "Rico",
+                               `5` = "Más rico"))
+
+
+
+```
+
 
 ## Map by region
 
@@ -98,6 +365,7 @@ region_map <- c("Amazonas", "Ancash", "Apurimac", "Arequipa", "Ayacucho",
 
 # Suponiendo que los conjuntos de datos se llaman malnutrition_14, malnutrition_15, etc.
 # Convertir la columna 'region' de cada conjunto de datos de numérica a categórica
+
 malnutrition_14$region <- factor(malnutrition_14$region, levels = 1:25, labels = region_map)
 malnutrition_15$region <- factor(malnutrition_15$region, levels = 1:25, labels = region_map)
 malnutrition_16$region <- factor(malnutrition_16$region, levels = 1:25, labels = region_map)
@@ -105,1650 +373,349 @@ malnutrition_17$region <- factor(malnutrition_17$region, levels = 1:25, labels =
 malnutrition_18$region <- factor(malnutrition_18$region, levels = 1:25, labels = region_map)
 malnutrition_19$region <- factor(malnutrition_19$region, levels = 1:25, labels = region_map)
 
-# Verificar los cambios en uno de los conjuntos de datos
-head(malnutrition_14)
-
 ```
 
 ```{r}
-# Columnas a retirar
-columns_to_remove <- c("HHID", "area_residence", "region", "conglomerado", "longitudx", "latitudy")
+area_map <- c("Urban", "Rural")
 
-# Crear nuevas variables para almacenar las columnas retiradas
-malnutrition_14_removed <- malnutrition_14[columns_to_remove]
-malnutrition_15_removed <- malnutrition_15[columns_to_remove]
-malnutrition_16_removed <- malnutrition_16[columns_to_remove]
-malnutrition_17_removed <- malnutrition_17[columns_to_remove]
-malnutrition_18_removed <- malnutrition_18[columns_to_remove]
-malnutrition_19_removed <- malnutrition_19[columns_to_remove]
-
-# Eliminar las columnas de los dataframes originales
-malnutrition_14 <- malnutrition_14[!(names(malnutrition_14) %in% columns_to_remove)]
-malnutrition_15 <- malnutrition_15[!(names(malnutrition_15) %in% columns_to_remove)]
-malnutrition_16 <- malnutrition_16[!(names(malnutrition_16) %in% columns_to_remove)]
-malnutrition_17 <- malnutrition_17[!(names(malnutrition_17) %in% columns_to_remove)]
-malnutrition_18 <- malnutrition_18[!(names(malnutrition_18) %in% columns_to_remove)]
-malnutrition_19 <- malnutrition_19[!(names(malnutrition_19) %in% columns_to_remove)]
-
+malnutrition_14$area_residence <- factor(malnutrition_14$area_residence, levels = 1:2, labels = area_map)
+malnutrition_15$area_residence <- factor(malnutrition_15$area_residence, levels = 1:2, labels = area_map)
+malnutrition_16$area_residence <- factor(malnutrition_16$area_residence, levels = 1:2, labels = area_map)
+malnutrition_17$area_residence <- factor(malnutrition_17$area_residence, levels = 1:2, labels = area_map)
+malnutrition_18$area_residence <- factor(malnutrition_18$area_residence, levels = 1:2, labels = area_map)
+malnutrition_19$area_residence <- factor(malnutrition_19$area_residence, levels = 1:2, labels = area_map)
 ```
 
 
-## Training and test
 
 ```{r}
-# 2. Function to create train and test set .....................................
+socio_14_unique <- socio_14[!duplicated(socio_14$HHID), ]
 
-create_training_and_test_sets <- function(train_years, test_year, selected_vars) {
-  # Crear una lista para almacenar los conjuntos de datos de entrenamiento
-  training_data_list <- list()
+malnutrition_socio14 <- malnutrition_14 %>%
+  inner_join(socio_14_unique, by = "HHID") 
+
+socio_15_unique <- socio_15[!duplicated(socio_15$HHID), ]
+
+malnutrition_socio15 <- malnutrition_15 %>%
+  inner_join(socio_15_unique, by = "HHID")
+
+socio_16_unique <- socio_16[!duplicated(socio_16$HHID), ]
+
+malnutrition_socio16 <- malnutrition_16 %>%
+  left_join(socio_16_unique, by = "HHID")
+
+socio_17_unique <- socio_17[!duplicated(socio_17$HHID), ]
+
+malnutrition_socio17 <- malnutrition_17 %>%
+  inner_join(socio_17_unique, by = "HHID")
+
+socio_18_unique <- socio_18[!duplicated(socio_18$HHID), ]
+
+malnutrition_socio18 <- malnutrition_18 %>%
+  inner_join(socio_18_unique, by = "HHID")
+
+socio_19_unique <- socio_19[!duplicated(socio_19$HHID), ]
+
+malnutrition_socio19 <- malnutrition_19 %>%
+  inner_join(socio_19_unique, by = "HHID")
+```
+
+```{r}
+saveRDS(malnutrition_socio19, "df_19.rds")
+```
+
+Child’s age (0 11, 12 23, or >24mo);
+
+Mother’s education (none or primary, secondary, or higher);
+
+Wealth index (categorized based on terciles);
+
+Place of residence (urban or rural);
+
+Division (Barisal, Chittagong, Dhaka, Khulna, Rajshahi, Rangpur, or Sylhet);
+
+Mother’s body mass index (BMI; thin <18.5; normal 18.5 24.9; or overweight
+ >24.9 kg/m2)
+ 
+Birth interval (<24, 24 47, or >47 mo).
+
+
+```{r}
+# Cargar librerías
+library(tidymodels)
+library(xgboost)
+library(ranger)
+
+# Función para entrenar y evaluar modelos
+train_and_evaluate <- function(train_data, test_data, xgb_params, rf_params) {
+  # Especificar la fórmula
+  formula <- malnutrition ~ age + mom_edu + wealth_index + residence_place + birth_interval + water_available
   
-  # Iterar a travÃ©s de los aÃ±os de entrenamiento
-  for (year in train_years) {
-    # Obtener el conjunto de datos correspondiente al aÃ±o
-    data <- malnutrition_data[[paste0("malnutrition_", year)]]
-    
-    # Seleccionar las columnas relevantes y convertir malnutrition a factor
-    data <- data %>%
-      select(
-        malnutrition,  all_of(selected_vars)) %>%
-      mutate(malnutrition = as.factor(malnutrition))
-    
-    # Almacenar el conjunto de datos en la lista
-    training_data_list[[year]] <- data
-  }
+  train_data <- train_data %>%
+  mutate(weight = ifelse(malnutrition == "1", 1.0, sum(malnutrition == "1") / sum(malnutrition == "0")))
   
-  # Combinar todos los conjuntos de datos de entrenamiento en uno solo
-  training_set <- do.call(rbind, training_data_list)
+  # Preprocesamiento
+  recipe <- recipe(formula, data = train_data) %>%
+    step_normalize(all_numeric_predictors()) %>%
+    prep()
+
+  train_processed <- bake(recipe, new_data = train_data)
+  test_processed <- bake(recipe, new_data = test_data)
   
-  # Obtener el conjunto de datos correspondiente al aÃ±o de prueba
-  test_set <- malnutrition_data[[paste0("malnutrition_", test_year)]]
+  # Definir modelo XGBoost
+  xgb_model <- boost_tree(
+    trees = xgb_params$trees,
+    tree_depth = xgb_params$tree_depth,
+    learn_rate = xgb_params$learn_rate,
+    loss_reduction = xgb_params$loss_reduction,
+    min_n = xgb_params$min_n
+  ) %>%
+    set_engine("xgboost", scale_pos_weight = nrow(train_data) / sum(train_data$malnutrition == "1")) %>%
+    set_mode("classification")
   
-  # Seleccionar las mismas columnas y convertir malnutrition a factor en el conjunto de prueba
-  test_set <- test_set %>%
-    select(
-      malnutrition,  all_of(selected_vars)) %>%
-    mutate(malnutrition = as.factor(malnutrition))
+  # Definir modelo Random Forest
+  rf_model <- rand_forest(
+    trees = rf_params$trees,
+    min_n = rf_params$min_n
+  ) %>%
+    set_engine("ranger", importance = "impurity", case.weights = train_data$weight) %>%
+    set_mode("classification")
+
+  # Entrenar modelos
+  xgb_fit <- xgb_model %>%
+    fit(formula, data = train_processed)
   
-  # Retornar el conjunto de entrenamiento y el conjunto de prueba
-  return(list(training_set = training_set, test_set = test_set))
+  rf_fit <- rf_model %>%
+    fit(formula, data = train_processed)
+
+  # Evaluar modelos
+  xgb_preds <- predict(xgb_fit, new_data = test_processed, type = "prob") %>%  # Probabilidades
+    bind_cols(predict(xgb_fit, new_data = test_processed, type = "class")) %>%  # Clases
+    bind_cols(test_data)
+
+  rf_preds <- predict(rf_fit, new_data = test_processed, type = "prob") %>%  # Probabilidades
+    bind_cols(predict(rf_fit, new_data = test_processed, type = "class")) %>%  # Clases
+    bind_cols(test_data)
+  
+  # Métricas de evaluación
+  metrics_xgb <- xgb_preds %>%
+    metrics(truth = malnutrition, estimate = .pred_class)
+
+  metrics_rf <- rf_preds %>%
+    metrics(truth = malnutrition, estimate = .pred_class)
+
+  return(list(xgb_preds = xgb_preds, rf_preds = rf_preds))
 }
 
+# Ejemplo de uso:
+# Suponiendo que tienes datasets llamados train_14_15, train_14_15_16, etc.
+# y test_16, test_17, etc., además de listas con hiperparámetros para cada año
 
-# Vector general de variables descriptivas
-opt_1 <- c(
-  "NDVI_mean",  
-  "NDVI_seasonal_diff", 
-  "pr_mean", "pr_seasonal_diff", 
-  "TMAX", "TMIN"
-)
 
-# Vector de umbrales 90/10
-opt_2 <- c(
-  "NDVI_high_90", "NDVI_low_10", "pr_high_90", "pr_low_10",
-  "tmax_high_90", "tmin_low_10"
-)
 
-# Vector de umbrales 99/1
-opt_3 <- c(
-  "NDVI_high_99", "NDVI_low_1", "pr_high_99", "pr_low_1",
-  "tmax_high_99", "tmin_low_1"
-)
-
-# Vector de umbrales 95/5
-opt_4 <- c(
-  "NDVI_high_95", "NDVI_low_5", "pr_high_95", "pr_low_5",
-  "tmax_high_95", "tmin_low_5"
-)
-
-# Vector de meses consecutivos por encima o debajo de umbral
-opt_5 <- c(
-  "consecutivas_veg_90", "consecutivas_veg_10",
-  "consecutivas_prec_90", "consecutivas_prec_10",
-  "consecutivas_tmax_90", "consecutivas_tmax_10",
-  "consecutivas_tmin_90", "consecutivas_tmin_10"
-)
-
-# Vector de grupos de meses consecutivos 
-opt_6 <- c(
-  "grupos_veg_90", "grupos_veg_10",
-  "grupos_prec_90", "grupos_prec_10",
-  "grupos_tmax_90", "grupos_tmax_10",
-  "grupos_tmin_90", "grupos_tmin_10"
-)
 ```
 
 ```{r}
-set.seed(123)
-```
-
-
-
-## 2016 validation
-
-### Option 1, 5 and 6
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:15, 16, c(opt_1,opt_5,opt_6))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 3,
-  min_n = 35,
-  trees = 1353
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2016 <- cbind(pred_class, malnutrition, malnutrition_16_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2016 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2016 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-```{r}
-library(leaflet)
-library(osmdata)
-library(sf)
-library(mapview)
-library(leafsync)
-```
-
-
-
-```{r}
-area1 <- getbb("Iquitos")
-
-hospitals <- area1 %>% opq() %>%
-  add_osm_feature(key = "amenity", value = "hospital") %>%
-  osmdata_sf()
-
-leaflet() %>%  addTiles() %>%
-  addPolygons(data = hospitals$osm_polygons)
-
-d1 <- rf_region_2016 %>%
-  select(malnutrition, longitudx, latitudy) 
-
-d2 <- rf_region_2016 %>%
-  select(pred_class, longitudx, latitudy) 
-
-area1 <- st_as_sf(d1, coords = c("longitudx", "latitudy"))
-area2 <- st_as_sf(d2, coords = c("longitudx", "latitudy"))
-
-st_crs(area1) <- 4326
-st_crs(area2) <- 4326
-
-m1 <- mapview(area1)
-m2 <- mapview(area2)
-
-m <- leafsync::sync(m1, m2)
-m
-```
-
-```{r}
-# Suponiendo que rf_region_2016 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2016$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2016 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
+transform_data <- function(df) {
+  df %>%
+    mutate(
+      mom_edu = ifelse(is.na(mom_edu), "Sin educación", mom_edu),
+      birth_interval = ifelse(is.na(birth_interval), 0, birth_interval),
+      water_available = ifelse(is.na(water_available), "No", water_available)
+    ) %>%
+    mutate(
+      mom_edu = recode(mom_edu, "Sin educación" = "Primaria"),
+      residence_place = recode(residence_place, "Capital, gran ciudad" = "Pequeña ciudad"),
+      wealth_index = recode(wealth_index, "Más rico" = "Rico")
+    ) %>%
+    mutate(
+      mom_edu = factor(mom_edu, levels = c("Primaria", "Secundaria", "Superior")),
+      residence_place = factor(residence_place, levels = c("Campo", "Pueblo", "Pequeña ciudad")),
+      water_available = factor(water_available, levels = c("No", "Si")),
+      wealth_index = factor(wealth_index, levels = c("Los más pobres", "Pobre", "Medio", "Rico"))
+    ) %>%
+    mutate(
+      birth_interval = case_when(
+        birth_interval < 18 ~ "zero_births",  # Reemplaza "very_short" con "zero_births"
+        birth_interval >= 18 & birth_interval < 60 ~ "optimal",
+        birth_interval >= 60 ~ "long"
+      )
+    ) %>%
+    mutate(birth_interval = factor(birth_interval, levels = c("zero_births", "optimal", "long")))
 }
 
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
-```
-
-
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2016 <- rf_region_2016 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2016 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2016 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
+# Aplicar la transformación a todas las bases de datos
+malnutrition_socio14 <- transform_data(malnutrition_socio14)
+malnutrition_socio15 <- transform_data(malnutrition_socio15)
+malnutrition_socio16 <- transform_data(malnutrition_socio16)
+malnutrition_socio17 <- transform_data(malnutrition_socio17)
+malnutrition_socio18 <- transform_data(malnutrition_socio18)
+malnutrition_socio19 <- transform_data(malnutrition_socio19)
 ```
 
 
-### Option 1 and 2
-
 ```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:15, 16, c(opt_1,opt_2))
+malnutrition_socio14 %>%
+  select(age) %>%
+  pivot_longer(cols = everything()) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
+  facet_wrap(~name, scales = "free") +
+  theme_minimal()
+```
+```{r}
+# Gráficos de barras para variables categóricas
+categorical_vars <- c("mom_edu", "wealth_index", "residence_place", "water_available", "birth_interval")
 
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
+malnutrition_socio14 %>%
+  select(all_of(categorical_vars)) %>%
+  pivot_longer(cols = everything()) %>%
+  ggplot(aes(x = value, fill = value)) +
+  geom_bar() +
+  facet_wrap(~name, scales = "free") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 3,
-  min_n = 35,
-  trees = 1353
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.2, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.15, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
 
 ```
 
-#### Departments
 ```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
+# Boxplots de edad vs. malnutrition
+malnutrition_socio14 %>%
+  ggplot(aes(x = birth_interval, y = age, fill = malnutrition)) +
+  geom_boxplot() +
+  theme_minimal()
 
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2016 <- cbind(pred_class, malnutrition, malnutrition_16_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2016 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2016 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
 ```
 
 ```{r}
-# Suponiendo que rf_region_2016 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2016$region)
+# Relaciones entre variables
+malnutrition_socio14 %>%
+  ggplot(aes(x = mom_edu, y = age, color = malnutrition)) +
+  geom_jitter(alpha = 0.5) +
+  theme_minimal()
+```
 
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
+
+## 2016
+
+### NA
+
+```{r}
+
+train_14_18 <- bind_rows(malnutrition_socio14, malnutrition_socio15,malnutrition_socio16, malnutrition_socio17,malnutrition_socio18) 
+
+#colSums(is.na(train_14_16))
+```
+
+
+### Results
+```{r}
+
+# Hiperparámetros de ejemplo
+xgb_params_2019 <- list(trees = 200, tree_depth = 8, learn_rate = 0.00007, min_n = 2, loss_reduction = 0)
+rf_params_2019 <- list(trees = 500, min_n = 10, mtry = 2)
+
+# Entrenar y evaluar para 2016
+result_2019 <- train_and_evaluate(train_14_18, malnutrition_socio19, xgb_params_2019, rf_params_2019)
+
+```
+
+
+### By region
+```{r}
+evaluate_by_region <- function(predictions, truth_col = "malnutrition") {
+  metrics_set <- metric_set(accuracy, sens, roc_auc)  # Conjunto de métricas
   
-    datos <- rf_region_2016 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
+  predictions %>%
+    mutate(
+      .pred_class = factor(.pred_class, levels = c("0", "1")),
+      !!sym(truth_col) := factor(!!sym(truth_col), levels = c("0", "1"))
+    ) %>%
+    group_by(region) %>%
+    metrics_set(truth = !!sym(truth_col), estimate = .pred_class, .pred_1) # Calcula métricas por región
 }
 
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
+# Evaluar XGBoost por región
+metrics_xgb_by_region <- evaluate_by_region(result_2019$xgb_preds)
+
+# Evaluar Random Forest por región
+metrics_rf_by_region <- evaluate_by_region(result_2019$rf_preds)
+
+print(metrics_xgb_by_region)
+
+print(metrics_rf_by_region)
+```
+
+#### RF
+
+```{r}
+predictions_rf_19 <-  result_2019$rf_preds %>%
+  group_by(conglomerado) %>%
+  mutate(
+    malnutrition_rate = mean(malnutrition == 1, na.rm = TRUE),  # Proporción de casos 1
+    pred_class_rate = mean(.pred_class == 1, na.rm = TRUE),  # Proporción de predicciones 1
+    malnut_con = ifelse(malnutrition_rate > 0, 1, 0),  # Si hay al menos 1 caso en el grupo
+    pred_con = ifelse(pred_class_rate > 0.3, 1, 0)  # Si supera el 30% en predicciones
+  ) %>%
+  ungroup()
 ```
 
 
-```{r}
-mapas_por_region
-```
-
-
-
-#### Regions
 
 ```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2016 <- rf_region_2016 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2016 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2016 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-## 2017 validation
-
-### Option 1, 5 and 6
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:16, 17, c(opt_1,opt_5,opt_6))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 1,
-  min_n = 37,
-  trees = 1617
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2017 <- cbind(pred_class, malnutrition, malnutrition_17_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2017 %>%
+metrics_region <- predictions_rf_19 %>%
+  mutate(
+    malnut_con = factor(malnut_con, levels = c(0,1)), 
+    pred_con = factor(pred_con, levels = c(0,1))
+  ) %>%
+  mutate(malnut_con = as.factor(malnut_con), pred_con = as.factor(pred_con)) %>%
   group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
+  summarise(
+    malnutrition_rate2 = mean(malnutrition == 1, na.rm = TRUE),
+    pred_class_rate2 = mean(.pred_class == 1, na.rm = TRUE),
+    accuracy = accuracy_vec(truth = malnut_con, estimate = pred_con),
+    sensitivity = sum(malnut_con == 1 & pred_con == 1, na.rm = TRUE) / 
+                  sum(malnut_con == 1, na.rm = TRUE)
+  )
+```
 
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2017 %>%
+#### XGB
+
+```{r}
+predictions_gb_16 <-  result_2016$xgb_preds %>%
+  group_by(conglomerado) %>%
+  mutate(
+    malnutrition_rate = mean(malnutrition == 1, na.rm = TRUE),  # Proporción de casos 1
+    pred_class_rate = mean(.pred_class == 1, na.rm = TRUE),  # Proporción de predicciones 1
+    malnut_con = ifelse(malnutrition_rate > 0, 1, 0),  # Si hay al menos 1 caso en el grupo
+    pred_con = ifelse(pred_class_rate > 0.3, 1, 0)  # Si supera el 30% en predicciones
+  ) %>%
+  ungroup()
+```
+
+
+
+```{r}
+metrics_region_gb <- predictions_gb_16 %>%
+  mutate(
+    malnut_con = factor(malnut_con, levels = c(0,1)), 
+    pred_con = factor(pred_con, levels = c(0,1))
+  ) %>%
+  mutate(malnut_con = as.factor(malnut_con), pred_con = as.factor(pred_con)) %>%
   group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-```{r}
-# Suponiendo que rf_region_2016 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2016$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2016 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
-}
-
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
+  summarise(
+    malnutrition_rate2 = mean(malnutrition == 1, na.rm = TRUE),
+    pred_class_rate2 = mean(.pred_class == 1, na.rm = TRUE),
+    accuracy = accuracy_vec(truth = malnut_con, estimate = pred_con),
+    sensitivity = sum(malnut_con == 1 & pred_con == 1, na.rm = TRUE) / 
+                  sum(malnut_con == 1, na.rm = TRUE),
+    auc = ifelse(
+      length(unique(pred_class_rate2)) > 1,
+      roc_auc_vec(truth = malnut_con, estimate = pred_class_rate2), 
+      NA_real_
+    )
+  )
 ```
 
 
-
-
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2017 <- rf_region_2017 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2017 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2017 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-
-
-### Option 1 and 2
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:16, 17, c(opt_1,opt_2))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 1,
-  min_n = 37,
-  trees = 1617
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2017 <- cbind(pred_class, malnutrition, malnutrition_17_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2017 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2017 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-```{r}
-# Suponiendo que rf_region_2016 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2017$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2017 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
-}
-
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
-```
-
-
-
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2017 <- rf_region_2017 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2017 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2017 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-
-
-
-
-
-
-## 2018 validation
-
-### Option 1, 5 and 6
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:17, 18, c(opt_1,opt_5,opt_6))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 1,
-  min_n = 38,
-  trees = 1200
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2018 <- cbind(pred_class, malnutrition, malnutrition_18_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2018 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2018 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-```{r}
-# Suponiendo que rf_region_2016 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2018$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2018 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
-}
-
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
-```
-
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2018 <- rf_region_2018 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2018 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2018 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-
-### Option 1 and 2
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:17, 18, c(opt_1,opt_2))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 1,
-  min_n = 38,
-  trees = 1200
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2018 <- cbind(pred_class, malnutrition, malnutrition_18_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2018 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2018 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-```{r}
-# Suponiendo que rf_region_2016 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2018$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2018 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
-}
-
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
-```
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2018 <- rf_region_2018 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2018 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2018 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-
-
-
-## 2019 validation
-
-### Option 1, 5 and 6
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:18, 19, c(opt_1,opt_5,opt_6))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 3,
-  min_n = 19,
-  trees = 1305
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2019 <- cbind(pred_class, malnutrition, malnutrition_19_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2019 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2019 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-```{r}
-# Suponiendo que rf_region_2019 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2019$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2019 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
-}
-
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
-```
-
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2019 <- rf_region_2019 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2019 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2019 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-
-
-### Option 1 and 2
-
-```{r}
-# Crear conjuntos de entrenamiento y prueba
-sets <- create_training_and_test_sets(14:18, 19, c(opt_1,opt_2))
-
-training_set <- sets$training_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-test_set <- sets$test_set %>%
-  mutate(TGAP = TMAX - TMIN) %>%
-  select(-TMAX, -TMIN)
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-# Crear un objeto recipe para preprocesamiento
-rec <- recipe(malnutrition ~ ., data = training_set) %>%
-  step_center(all_numeric()) %>%
-  step_scale(all_numeric())
-
-# Preprocesamiento
-rec_preprocessed <- prep(rec)
-
-train_processed  <- bake(rec_preprocessed, new_data = training_set)
-
-test_processed  <- bake(rec_preprocessed, new_data = test_set)
-
-
-rf_spec <- rand_forest(
-  mtry = 3,
-  min_n = 19,
-  trees = 1305
-) %>%
-  set_engine("ranger", importance = 'impurity', regularization.factor = 0.5) %>%
-  set_mode("classification")
-
-
-rf_wf <- 
-  workflow() %>% 
-  add_model(rf_spec) %>% 
-  add_recipe(rec_preprocessed)
-
-rf_fit <- rf_wf %>%
-  fit(data = training_set)
-
-# Predicciones para el conjunto de entrenamiento
-rf_training_pred <- 
-  predict(rf_fit, training_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(training_set %>% select(malnutrition))
-
-rf_training_pred %>%                # training set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_training_pred %>%                # training set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-# Predicciones para el conjunto de prueba
-rf_testing_pred <- 
-  predict(rf_fit, test_set, type = "prob") %>%
-  mutate(.pred_class =  as.factor(ifelse(.pred_1 > 0.1, "1", "0"))) %>%
-  bind_cols(test_set %>% select(malnutrition))
-
-rf_testing_pred %>%                   # test set predictions
-  roc_auc(truth = malnutrition, .pred_1)
-
-rf_testing_pred %>%                   # test set predictions
-  accuracy(truth = malnutrition, .pred_class)
-
-```
-
-#### Departments
-```{r}
-pred_class <- rf_testing_pred$.pred_class
-malnutrition <- test_set$malnutrition
-
-# Combina los dataframes y convierte 'region' en factor
-rf_region_2019 <- cbind(pred_class, malnutrition, malnutrition_19_removed) %>%
-  as_tibble()
-
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2019 %>%
-  group_by(region) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2019 %>%
-  group_by(region) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
-
-
-
-
-```{r}
-# Suponiendo que rf_region_2019 tiene una columna 'region'
-lista_regiones <- unique(rf_region_2019$region)
-
-# Función para procesar cada subconjunto
-procesar_region <- function(name_region) {
-  
-    datos <- rf_region_2019 %>%
-      filter(region == name_region)
-  
-    d1 <- datos %>%
-      select(malnutrition, longitudx, latitudy)
-    d2 <- datos %>%
-      select(pred_class, longitudx, latitudy)
-
-    ground_truth <- st_as_sf(d1, coords = c("longitudx", "latitudy"), crs = 4326)
-    prediction <- st_as_sf(d2, coords = c("longitudx", "latitudy"), crs = 4326)
-
-    # Ajustar el tamaño de las observaciones basado en los valores de 'malnutrition' y 'pred_class'
-
-    size_area1 <- ifelse(ground_truth$malnutrition == 1, 5, 0.5)  # Ajusta los valores 1.5 y 0.5 según
-    size_area2 <- ifelse(prediction$pred_class == 1, 5, 0.5)
-
-    m1 <- mapview(ground_truth, cex = size_area1)
-    m2 <- mapview(prediction,cex = size_area2)
-
-    m <- leafsync::sync(m1, m2)
-    return(m)
-}
-
-# Aplicar la función a cada subconjunto
-mapas_por_region <- lapply(lista_regiones, procesar_region)
-```
-
-```{r}
-mapas_por_region
-```
-
-
-
-
-#### Regions
-
-```{r}
-# Asignar cada región a una zona geográfica
-zone_map <- c("Tumbes"="Costa", "Piura"="Costa", "Lambayeque"="Costa", "La Libertad"="Costa", 
-              "Ancash"="Costa", "Lima"="Costa", "Ica"="Costa", "Arequipa"="Costa", 
-              "Moquegua"="Costa", "Tacna"="Costa", "Amazonas"="Sierra", "Cajamarca"="Sierra", 
-              "Huanuco"="Sierra", "Pasco"="Sierra", "Junin"="Sierra", "Huancavelica"="Sierra", 
-              "Ayacucho"="Sierra", "Cusco"="Sierra", "Apurimac"="Sierra", "Puno"="Sierra", 
-              "Loreto"="Selva", "San Martin"="Selva", "Ucayali"="Selva", "Madre de Dios"="Selva")
-
-# Añadir la columna region_3 a rf_region_2016
-rf_region_2019 <- rf_region_2019 %>%
-  mutate(region_3 = zone_map[as.character(region)])
-
-# Calcular la precisión por región
-accuracy_by_region <- rf_region_2019 %>%
-  group_by(region_3) %>%
-  summarize(accuracy = sum(pred_class == malnutrition) / n())
-
-# Calcular la sensibilidad (recall) por región
-sensitivity_by_region <- rf_region_2019 %>%
-  group_by(region_3) %>%
-  summarize(sensitivity = sum(pred_class == 1 & malnutrition == 1) / 
-                          sum(malnutrition == 1))
-
-
-
-print(accuracy_by_region)
-
-print(sensitivity_by_region)
-```
